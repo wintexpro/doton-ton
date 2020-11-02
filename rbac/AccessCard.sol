@@ -10,6 +10,8 @@ contract AccessCard {
     TvmCell myInitState;
     uint256 touched = 0;
     address lastTouched;
+
+    mapping (uint8 => bytes32) public roles;
     
     /*
      * Проверяет, что вызываемый текущим контрактом контракт имеет такой же init state
@@ -26,6 +28,9 @@ contract AccessCard {
         rootRbacPublicKey = _accessControllerPublicKey;
         myPublicKey = _myPublicKey;
         myInitState = _myInitState;
+
+        roles[1] = 'ADMIN';
+        roles[2] = 'RELAYER';
     }
 
     function touchSome(IAccessCard target) external {
