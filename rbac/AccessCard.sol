@@ -5,29 +5,32 @@ abstract contract IAccessCard {
 }
 
 contract AccessCard {
-    uint256 rootRbacPublicKey;
-    uint256 walletPublicKey;
-    TvmCell walletInitState;
+    uint256 accessControllerPublicKey;
+    uint256 myPublicKey;
+    TvmCell myInitState;
     uint256 touched = 0;
     address lastTouched;
     
+    /*
+     * Проверяет, что вызываемый текущим контрактом контракт имеет такой же init state
+     */
     modifier isSameWallet(uint256 touchingPublicKey) {
         tvm.accept();
-        TvmCell sendersStateInit = tvm.insertPubkey(walletInitState, touchingPublicKey);
+        TvmCell sendersStateInit = tvm.insertPubkey(myInitState, touchingPublicKey);
         require (msg.sender.value == tvm.hash(sendersStateInit));
         _;
     }
 
-    constructor(uint256 _rootRbacPublicKey, uint256 _walletPublicKey, TvmCell _walletInitState) public {
+    constructor(uint256 _accessControllerPublicKey, uint256 _myPublicKey, TvmCell _myInitState) public {
         tvm.accept();
-        rootRbacPublicKey = _rootRbacPublicKey;
-        walletPublicKey = _walletPublicKey;
-        walletInitState = _walletInitState;
+        rootRbacPublicKey = _accessControllerPublicKey;
+        myPublicKey = _myPublicKey;
+        myInitState = _myInitState;
     }
 
     function touchSome(IAccessCard target) external {
         tvm.accept();
-        target.touchMe(walletPublicKey);
+        target.touchMe(target);
     }
 
     function touchMe(uint256 touchingPublicKey) isSameWallet(touchingPublicKey) public {

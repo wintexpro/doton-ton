@@ -2,22 +2,26 @@ pragma solidity >= 0.6.0;
 
 import "AccessCard.sol";
 
+/* 
+ * Контракт хранит код контракта AccessCard, деплоит в сеть контракты AccessCard.
+ * Формально является мостом между вызывающим AccessCard и вызываемым
+ */
 contract AccessController {
-    TvmCell rbacWalletInitState;
-    uint128 initialValue;
-    uint256 rootPublicKey;
+    TvmCell accessCardInitState;
+    uint128 initialValue; // количество токенов, которое необходимо отправить, чтобы задеплоить контракт AccesCard
+    uint256 myPublicKey; // AccessController public key 
 
-    constructor (TvmCell _rbacWalletInitState, uint128 _initialValue, uint256 _rootPublicKey) public {
+    constructor (TvmCell _accessCardInitState, uint128 _initialValue/* , uint256 _myPublicKey */) public {
         tvm.accept();
-        rbacWalletInitState = _rbacWalletInitState;
+        accessCardInitState = _accessCardInitState;
         initialValue = _initialValue;
-        rootPublicKey = _rootPublicKey;
+        myPublicKey = tvm.pubkey();
     }
 
-    function deployWalletWithPubkey(uint256 pubkey) public returns (address deployedContract) {
+    function deployAccessCardWithPubkey(uint256 pubkey) public returns (address deployedContract) {
         tvm.accept();
-		TvmCell stateInitWithKey = tvm.insertPubkey(rbacWalletInitState, pubkey);
-		address newWallet = new RBACWallet{stateInit:stateInitWithKey, value:initialValue}(rootPublicKey, pubkey, rbacWalletInitState);
+		TvmCell stateInitWithKey = tvm.insertPubkey(accessCardInitState, pubkey);
+		address newWallet = new RBACWallet{stateInit:stateInitWithKey, value:initialValue}(myPublicKey, pubkey, accessCardInitState);
 		return newWallet;
 	}
 
