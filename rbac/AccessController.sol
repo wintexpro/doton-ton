@@ -11,7 +11,6 @@ contract AccessController {
     uint128 initialValue; // количество токенов, которое необходимо отправить, чтобы задеплоить контракт AccesCard
     uint256 myPublicKey; // AccessController public key 
     
-    // mapping (address => uint8) public members; // AccessCard address => roleId
     address superAdminPublicKey = 0x00; // super-admin public key. Только один AccessCard может иметь роль super-admin.
 
     modifier acceptOnlySuperAdminPublicKey(oldSuperAdminPublicKey) {
@@ -35,28 +34,33 @@ contract AccessController {
     }
 
     /**
-     * grantSuperAdminRole
+     * @dev Returns superAdminPublicKey
      */
-    function grantSuperAdminRole(uint256 futureSuperAdminPublicKey) acceptOnlyOwner public {
-        require(adminPublicKey == 0x00);
-        superAdminPublicKey = futureSuperAdminPublicKey;
-        deployAccessCardWithPubkey(futureSuperAdminPublicKey, 'ADMIN'); // деплоим админу AccessCard c ролью admin
+    function getSuperAdminPublicKey() public returns (bytes32) {
+        return superAdminPublicKey;
     }
 
-    // TODO нужен метод (здесь или внутри AccessCard, или доработка метода выше), чтобы переназначить роль super-admin-а
+    /**
+     * grantSuperAdminRole
+     */
+    function grantSuperAdminRole(uint256 futureSuperAdminPublicKey) acceptOnlyOwner() public {
+        require(adminPublicKey == 0x00);
+        superAdminPublicKey = futureSuperAdminPublicKey;
+        deployAccessCardWithPubkey(futureSuperAdminPublicKey); // деплоим админу AccessCard c ролью admin
+    }
+
     function changeAdmin(uint newSuperAdminPublicKey, uint oldSuperAdminPublicKey) acceptOnlySuperAdminPublicKey(oldSuperAdminPublicKey) external {
         /* TvmCell sendersStateInit = tvm.insertPubkey(myInitState, touchingPublicKey); короч тут надо проверить, что метод вызван из AccessCard
         require (msg.sender.value == tvm.hash(sendersStateInit)); */
         superAdminPublicKey = newSuperAdminPublicKey;
     }
 
-    // админ создает
-    function deployAccessCardWithPubkey(uint256 pubkey, uint8 role) public returns (address deployedContract) {
-        require (role != 'ADMIN', 'To grant admin role use other method');
-        tvm.accept();
+    // создает хоть кто
+    function deployAccessCardWithPubkey(uint256 pubkey) public returns (address deployedContract) {
+        /* require (role != 'ADMIN', 'To grant admin role use other method');
+        tvm.accept(); */
 		TvmCell stateInitWithKey = tvm.insertPubkey(accessCardInitState, pubkey);
-        require (role == 'RELAYER'); // TODO здесь адекватную проверку, что roleId корректен
-        address newAccessCard = new AccessCard{stateInit:stateInitWithKey, value:initialValue}(myPublicKey, pubkey, role, accessCardInitState);
+        address newAccessCard = new AccessCard{stateInit:stateInitWithKey, value:initialValue}(myPublicKey, pubkey, accessCardInitState);
 		return newAccessCard;
 	}
 }

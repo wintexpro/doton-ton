@@ -1,5 +1,10 @@
 pragma solidity >= 0.6.0;
 
+abstract contract IAccessController {
+    function changeAdmin(uint newSuperAdminPublicKey, uint oldSuperAdminPublicKey) external;
+    function getSuperAdminPublicKey() public virtual;
+}
+
 abstract contract IAccessCard {
     function touchMe(uint256 pubkey) public virtual;
     function hasRole(bytes32 role, IAccessCard target) public virtual;
@@ -8,13 +13,13 @@ abstract contract IAccessCard {
 }
 
 contract AccessCard {
-    uint256 accessControllerPublicKey;
+    address accessControllerAddress;
     uint256 myPublicKey;
     TvmCell myInitState;
     uint256 touched = 0;
     address lastTouched;
 
-    mapping(bytes32 => bool) public roles = ['ADMIN', 'RELAYER', 'DEACTIVATED']; // видимо сюда передать данные во время деплоя (короч 33 и 34 строку перенести в AccessController)
+    mapping(bytes32 => bool) public roles = [];
     bytes32 myRole;
     
     /*
@@ -27,24 +32,41 @@ contract AccessCard {
         _;
     }
 
-    // Modifier that allows public function to accept external calls only from owner
+    /**
+     * Modifier that allows public function to accept external calls only from owner
+     */
     modifier acceptOnlyOwner {
         require(tvm.pubkey() == msg.pubkey());
         tvm.accept();
         _;
     }
 
-    constructor(uint256 _accessControllerPublicKey, uint256 _myPublicKey, TvmCell _myInitState, bytes32 _role) public {
+    /**
+     * Only admins or superadmin can grant roles
+     */
+    modifier isAdminOrSuperadmin(address sender) {
+        require(
+            (IAccessCard(sender).hasRole('ADMIN', msg.sender) || IAccessCard(sender).hasRole('SUPERADMIN', msg.sender)),
+            "Sender must be an admin or superadmin"
+        );
+        _;
+    }
+
+    constructor(uint256 _accessControllerAddress, uint256 _myPublicKey, TvmCell _myInitState) public {
         tvm.accept();
-        rootRbacPublicKey = _accessControllerPublicKey;
+        accessControllerAddress = _accessControllerAddress;
         myPublicKey = _myPublicKey;
         myInitState = _myInitState;
+        roles['SUPERADMIN'] = true;
         roles['ADMIN'] = true;
-        roles['RELAYER'] = true;
-        roles['DEACTIVATED'] = true;
+        roles['MODERATOR'] = true;
+        roles['USER'] = true;
 
-        require(isRoleExists(_role), 'Incorrect role');
-        myRole = _role;
+        if (IAccessController(accessControllerAddress).getSuperAdminPublicKey() == _myPublicKey) { // TODO так можно?
+            myRole = 'SUPERADMIN';
+        } else {
+            myRole = 'USER';
+        }
     }
 
     function touchSome(IAccessCard target) external {
@@ -88,34 +110,42 @@ contract AccessCard {
     /**
      * @dev Grants `role` to `target`
      */
-    function grantRole(bytes32 role, IAccessCard target) external {
-        require(hasRole('ADMIN', msg.sender), "grantRole: Sender must be an admin to grant");
-        require(tvm.pubkey() != msg.pubkey(), "grantRole: Can not grant role for himself");
-        require(isRoleExists(_role), 'Incorrect role');
+    function grantRole(bytes32 role, IAccessCard target) isAdminOrSuperadmin(msg.sender) external {
+        require(tvm.pubkey() != msg.pubkey(), "grantRole: Can not grant role for himself"); // TODO может не нужно, если есть external?
+
         target.changeRole(role, myPublicKey);
-        if (role == 'ADMIN') {
-            myRole = 'RELAYER';
-            accessControllerPublicKey.superAdminPublicKey.changeAdmin(target.myPublicKey); //TODO в AccessController сменить адрес - так?
+        if (role == 'SUPEARDMIN') {
+            myRole = 'USER';
+            IAccessController(accessControllerAddress).changeAdmin(target.myPublicKey); //TODO видимо так
         }
     }
 
     /**
      * Changes role for current AccessCard by another AccessCard
      */
-    function changeRole(bytes32 role, uint256 touchingPublicKey) public isSameWallet(touchingPublicKey) {
-        IAccessCard target = msg.sender.value; // TODO как вызвать метод вызывающего контракта по touchingPublicKey?
-        require(target.hasRole('ADMIN', msg.sender), "changeRole: Sender must be an admin to grant");
-        require(isRoleExists(_role), 'Incorrect role');
+    function changeRole(bytes32 role, uint256 touchingPublicKey) isSameWallet(touchingPublicKey) isAdminOrSuperadmin(msg.sender) public {
+        require(isRoleExists(role), 'Incorrect role'); // TODO Нужна ли такая проверка в grantRole (заранее == лучше?)
+        if ( hasRole('ADMIN', IAccessCard(msg.sender)) ) {
+            require(role == 'USER' || role == 'MODERATOR', "grantRole: Admin can not grant this role");
+            require(target.hasRole('USER') || target.hasRole('MODERATOR'), "grantRole: Insuitable target role");
+        } else // TODO можно объединить два условия выше в один require.
+        if ( hasRole('SUPERADMIN', IAccessCard(msg.sender)) ) {
+            require(role == 'USER' || role == 'ADMIN', "grantRole: Superadmin can not grant this role");
+            require(target.hasRole('USER') || target.hasRole('ADMIN'), "grantRole: Insuitable target role");
+        }
+        // TODO Нужна ли такая проверка в grantRole (заранее == лучше?). Если нужна, то может в модификатор эти два if-а?
+        // TODO Если затратно для проверок, то может переписать changeRole на отдельные методы ?
+        // TODO Может ли суперадмин установить админу роль модератора? Можно сделать несколько ролей юзерам (хранить не одну роль, а, например, маппинг роль->bool)
         _changeRole(role);
     }
 
     /**
      * @dev Deactivate yourself
-     * - admin can not to renounce role 
+     * - superadmin can not to renounce role 
      */
     function deactivateHimself() public acceptOnlyOwner() {
-        require(myRole != 'ADMIN', "Admin can not to deactivate himself");
-        myRole = 'DEACTIVATED';
+        require(myRole != 'SUPERADMIN', "Superadmin can not to deactivate himself");
+        myRole = 'USER';
     }
 
     /**
