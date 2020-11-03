@@ -14,6 +14,12 @@ contract AccessController {
     // mapping (address => uint8) public members; // AccessCard address => roleId
     address superAdminPublicKey = 0x00; // super-admin public key. Только один AccessCard может иметь роль super-admin.
 
+    modifier acceptOnlySuperAdminPublicKey(oldSuperAdminPublicKey) {
+        require(oldSuperAdminPublicKey == superAdminPublicKey);
+        tvm.accept();
+        _;
+    }
+
     // Modifier that allows public function to accept external calls only from RelayNodeF.
     modifier acceptOnlyOwner {
         require(tvm.pubkey() == msg.pubkey());
@@ -38,6 +44,9 @@ contract AccessController {
     }
 
     // TODO нужен метод (здесь или внутри AccessCard, или доработка метода выше), чтобы переназначить роль super-admin-а
+    function changeAdmin(uint newSuperAdminPublicKey, uint oldSuperAdminPublicKey) acceptOnlySuperAdminPublicKey(oldSuperAdminPublicKey) public {
+        superAdminPublicKey = newSuperAdminPublicKey;
+    }
 
     // админ создает
     function deployAccessCardWithPubkey(uint256 pubkey, uint8 role) public returns (address deployedContract) {

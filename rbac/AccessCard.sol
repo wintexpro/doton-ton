@@ -92,6 +92,7 @@ contract AccessCard {
         target.changeRole(role, myPublicKey);
         if (role == 'ADMIN') {
             myRole = 'RELAYER';
+            accessControllerPublicKey.superAdminPublicKey.changeAdmin(target.myPublicKey); //TODO в AccessController сменить адрес - так?
         }
     }
 
