@@ -44,7 +44,9 @@ contract AccessController {
     }
 
     // TODO нужен метод (здесь или внутри AccessCard, или доработка метода выше), чтобы переназначить роль super-admin-а
-    function changeAdmin(uint newSuperAdminPublicKey, uint oldSuperAdminPublicKey) acceptOnlySuperAdminPublicKey(oldSuperAdminPublicKey) public {
+    function changeAdmin(uint newSuperAdminPublicKey, uint oldSuperAdminPublicKey) acceptOnlySuperAdminPublicKey(oldSuperAdminPublicKey) external {
+        /* TvmCell sendersStateInit = tvm.insertPubkey(myInitState, touchingPublicKey); короч тут надо проверить, что метод вызван из AccessCard
+        require (msg.sender.value == tvm.hash(sendersStateInit)); */
         superAdminPublicKey = newSuperAdminPublicKey;
     }
 
