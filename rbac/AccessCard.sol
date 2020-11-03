@@ -72,7 +72,6 @@ contract AccessCard {
      * @dev Returns current role of this AccessCard
      */
     function getRole() public returns (bytes32) {
-        tvm.accept();
         return myRole;
     }
 
