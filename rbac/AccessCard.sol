@@ -2,14 +2,14 @@ pragma solidity >= 0.6.0;
 
 abstract contract IAccessController {
     function changeAdmin(uint newSuperAdminPublicKey, uint oldSuperAdminPublicKey) external;
-    function getSuperAdminPublicKey() public virtual;
+    function getSuperAdminPublicKey() public virtual returns (bytes32);
 }
 
 abstract contract IAccessCard {
     function touchMe(uint256 pubkey) public virtual;
-    function hasRole(bytes32 role, IAccessCard target) public virtual;
-    function getRole() public virtual;
-    function changeRole(bytes32 role, uint256 touchingPublicKey) public virtual;
+    function hasRole(bytes32 role, IAccessCard target) public virtual returns;
+    function getRole() public virtual returns (bytes32);
+    function changeRole(bytes32 role, uint256 touchingPublicKey) public virtual returns (bytes32);
 }
 
 contract AccessCard {
@@ -114,7 +114,7 @@ contract AccessCard {
         require(tvm.pubkey() != msg.pubkey(), "grantRole: Can not grant role for himself"); // TODO может не нужно, если есть external?
 
         target.changeRole(role, myPublicKey);
-        if (role == 'SUPEARDMIN') {
+        if (role == 'SUPERADMIN') {
             myRole = 'USER';
             IAccessController(accessControllerAddress).changeAdmin(target.myPublicKey); //TODO видимо так
         }
