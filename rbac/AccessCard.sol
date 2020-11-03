@@ -2,6 +2,9 @@ pragma solidity >= 0.6.0;
 
 abstract contract IAccessCard {
     function touchMe(uint256 pubkey) public virtual;
+    function hasRole(bytes32 role, IAccessCard target) public virtual;
+    function getRole() public virtual;
+    function changeRole(bytes32 role, uint256 touchingPublicKey) public virtual;
 }
 
 contract AccessCard {
@@ -24,7 +27,7 @@ contract AccessCard {
         _;
     }
 
-    // Modifier that allows public function to accept external calls only from RelayNodeF.
+    // Modifier that allows public function to accept external calls only from owner
     modifier acceptOnlyOwner {
         require(tvm.pubkey() == msg.pubkey());
         tvm.accept();
@@ -85,7 +88,7 @@ contract AccessCard {
     /**
      * @dev Grants `role` to `target`
      */
-    function grantRole(bytes32 role, IAccessCard target) public {
+    function grantRole(bytes32 role, IAccessCard target) external {
         require(hasRole('ADMIN', msg.sender), "grantRole: Sender must be an admin to grant");
         require(tvm.pubkey() != msg.pubkey(), "grantRole: Can not grant role for himself");
         require(isRoleExists(_role), 'Incorrect role');
@@ -100,10 +103,10 @@ contract AccessCard {
      * Changes role for current AccessCard by another AccessCard
      */
     function changeRole(bytes32 role, uint256 touchingPublicKey) public isSameWallet(touchingPublicKey) {
-        IAccessCard target = msg.sender.value; // TODO как вызвать метод вызываемого по touchingPublicKey?
+        IAccessCard target = msg.sender.value; // TODO как вызвать метод вызывающего контракта по touchingPublicKey?
         require(target.hasRole('ADMIN', msg.sender), "changeRole: Sender must be an admin to grant");
         require(isRoleExists(_role), 'Incorrect role');
-        target._changeRole(role);
+        _changeRole(role);
     }
 
     /**
