@@ -162,4 +162,29 @@ contract AccessCard {
         myRole = role;
     }
 
+    // Function onBounce is executed on inbound messages with set <bounced> flag. This function can not be called by
+	// external/internal message
+	// This function takes the body of the message as an argument.
+	onBounce(TvmSlice slice) external {
+		// Increase the counter.
+		// bounceCounter++;
+
+		// Start decoding the message. First 32 bits store the function id.
+		uint32 functionId = slice.decode(uint32);
+
+		// Api function tvm.functionId() allows to calculate function id by function name.
+		if (functionId == tvm.functionId(IAccessCard.changeRole)) {
+			//Function decodeFunctionParams() allows to decode function parameters from the slice.
+			// After decoding we store the arguments of the function in the state variables.
+            bytes32 param_initiatiorRole;
+            bytes32 param_role;
+            uint256 param_touchingPublicKey;
+			(param_initiatiorRole, param_role, param_touchingPublicKey) = slice.decodeFunctionParams(IAccessCard.changeRole);
+            if (param_initiatiorRole == "SUPERADMIN" && param_role == "SUPERADMIN") {
+                myRole = "SUPERADMIN";
+            }
+		} /* else if (functionId == tvm.functionId(AnotherContract.receiveValues)) {
+			(invalidValue1, invalidValue2, invalidValue3) = slice.decodeFunctionParams(AnotherContract.receiveValues);
+		} */
+	}
 }
