@@ -17,8 +17,6 @@ contract AccessCard {
     address accessControllerAddress;
     uint256 myPublicKey;
     TvmCell myInitState;
-    // uint256 touched = 0;
-    // address lastTouched;
 
     mapping(bytes32 => bool) public roles;
     bytes32 myRole;
@@ -67,6 +65,15 @@ contract AccessCard {
         _;
     }
 
+    /**
+     * @dev Checks that role exists
+     */
+    modifier isRoleExists(bytes32 role) {
+        require(roles[role],  104, 'Incorrect role');
+        tvm.accept();
+        _;
+    }
+
     constructor(address _accessControllerAddress, uint256 _myPublicKey, address _superAdminAddress, TvmCell _myInitState) public {
         tvm.accept();
         accessControllerAddress = _accessControllerAddress;
@@ -110,22 +117,6 @@ contract AccessCard {
     // === Work with roles: ===
 
     /**
-     * @dev Checks that role exists
-     */
-    function isRoleExists(bytes32 role) public view returns (bool) {
-        tvm.accept();
-        return roles[role];
-    }
-
-    /**
-     * @dev Returns current role of this AccessCard
-     */
-    /* function getRole() public view virtual returns (bytes32) {
-        tvm.accept();
-        return myRole;
-    } */
-
-    /**
      * @dev Returns `true` if `target` has been granted `role`.
      */
     function hasRole(bytes32 role) public view virtual returns (bool) {
@@ -136,8 +127,7 @@ contract AccessCard {
     /**
      * @dev Grants `role` to `target`
      */
-    function grantRole(bytes32 role, address targetAddress) acceptOnlyOwner() isAdminOrSuperadmin() /* isCorrectGranting(msg.sender, role, targetAddress) */ external {
-        require(isRoleExists(role),  104, 'Incorrect role'); // TODO Может и в модификатор
+    function grantRole(bytes32 role, address targetAddress) acceptOnlyOwner() isAdminOrSuperadmin() isRoleExists(role) external {
         require(targetAddress != address(this),  105, "grantRole: Can not grant role for himself"); // TODO может не нужно, если есть external?
         tvm.accept();
         IAccessCard(targetAddress).changeRole(myRole, role, myPublicKey);
@@ -150,8 +140,7 @@ contract AccessCard {
     /**
      * Changes role for current AccessCard by another AccessCard
      */
-    function changeRole(bytes32 initiatiorRole, bytes32 role, uint256 touchingPublicKey) isSameWallet(touchingPublicKey) /* isAdminOrSuperadmin(initiator) */ isCorrectGranting(initiatiorRole, role) public virtual {
-        require(isRoleExists(role),  104, 'Incorrect role'); // TODO Может и в модификатор
+    function changeRole(bytes32 initiatiorRole, bytes32 role, uint256 touchingPublicKey) isSameWallet(touchingPublicKey) isRoleExists(role) isCorrectGranting(initiatiorRole, role) public virtual {
         _changeRole(role);
     }
 
@@ -159,7 +148,7 @@ contract AccessCard {
      * @dev Deactivate yourself
      * - superadmin can not to renounce role 
      */
-    function deactivateHimself() public acceptOnlyOwner() {
+    function deactivateHimself() acceptOnlyOwner() public {
         require(myRole != 'SUPERADMIN',  106, "Superadmin can not to deactivate himself");
         tvm.accept();
         myRole = 'USER';
@@ -168,8 +157,7 @@ contract AccessCard {
     /**
      * @dev Change role for yourself
      */
-    function _changeRole(bytes32 role) private {
-        require(isRoleExists(role),  104, 'Incorrect role');
+    function _changeRole(bytes32 role) isRoleExists(role)  private {
         tvm.accept();
         myRole = role;
     }
