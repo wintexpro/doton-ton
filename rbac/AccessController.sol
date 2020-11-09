@@ -26,28 +26,39 @@ contract AccessController {
         _;
     }
 
-    constructor (TvmCell _accessCardInitState, uint128 _initialValue, uint256 _myPublicKey) public {
+    constructor (TvmCell _accessCardInitState, uint128 _initialValue/* , uint256 _myPublicKey */) public {
         tvm.accept();
         accessCardInitState = _accessCardInitState;
-        initialValue = _initialValue;
-        myPublicKey = _myPublicKey; // TODO теперь скорее всего не нужен
-        // делаем владельца суперадмином:
-        superAdminAddress = msg.sender;
-        deployAccessCardWithPubkey(_myPublicKey); // деплоим админу AccessCard c ролью admin
+        initialValue = _initialValue; // TODO логику с этим полем
+        myPublicKey = tvm.pubkey();//TODO зачем _myPublicKey, разве нельзя tvm.pubkey()?; // TODO теперь скорее всего не нужен
+        superAdminAddress = address(this);
+    }
+
+    function getInfo() public view returns (uint128 info_initialValue, uint256 info_myPublicKey, address info_superAdminAddress) {
+        tvm.accept();
+        return (initialValue, myPublicKey, superAdminAddress);
+    }
+
+    function updateInitialValue(uint128 newInitialValue) acceptOnlyOwner() external {
+        initialValue = newInitialValue;
     }
 
     /**
-     * grantSuperAdminRole
+     * deploySuperAdminContract
      */
-    /* function grantSuperAdminRole(uint256 futureSuperAdminPublicKey) acceptOnlyOwner() public {
-        // require(superAdminAddress); TODO проверить
-        superAdminAddress = msg.sender;
-        deployAccessCardWithPubkey(futureSuperAdminPublicKey); // деплоим админу AccessCard c ролью admin
-    } */
+    function grantSuperAdminRole(address accessCardAddress) acceptOnlyOwner() public returns (address deployedSuperAdminContract, address hui, address addrcalc) {
+        //TODO РАСКОММЕНТИТЬ require(superAdminAddress == address(this), 101, 'Superadmin already created earler');
+        tvm.accept();
+        //address superAdminContract = deployAccessCardWithPubkey(futureSuperAdminPublicKey); // деплоим суперадмину AccessCard
+        //TvmCell stateInitWithKey = tvm.insertPubkey(accessCardInitState, futureSuperAdminPublicKey);
+		superAdminAddress = address(tvm.hash(stateInitWithKey));
+        // address superAdminContract = deployAccessCardWithPubkey(futureSuperAdminPublicKey); // деплоим суперадмину AccessCard
+        // address newAccessCard = new AccessCard{stateInit:stateInitWithKey, value:initialValue}(address(this), futureSuperAdminPublicKey, address(tvm.hash(stateInitWithKey)), accessCardInitState);
+        return superAdminAddress;
+    }
 
     function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress) acceptOnlySuperAdmin(oldSuperAdminAddress) external virtual {
-        /* TvmCell sendersStateInit = tvm.insertPubkey(myInitState, touchingPublicKey); короч тут надо проверить, что метод вызван из AccessCard
-        require (msg.sender.value == tvm.hash(sendersStateInit)); */
+        tvm.accept();
         superAdminAddress = newSuperAdminAddress;
     }
 
@@ -56,7 +67,7 @@ contract AccessController {
         // require (role != 'ADMIN', 'To grant admin role use other method');
         tvm.accept();
 		TvmCell stateInitWithKey = tvm.insertPubkey(accessCardInitState, pubkey);
-        address newAccessCard = new AccessCard{stateInit:stateInitWithKey, value:initialValue}(address(this), pubkey, msg.sender, accessCardInitState);
+        address newAccessCard = new AccessCard{stateInit:stateInitWithKey, value:initialValue}(address(this), pubkey, superAdminAddress, accessCardInitState);
 		return newAccessCard;
 	}
 }

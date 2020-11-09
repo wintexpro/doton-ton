@@ -74,6 +74,11 @@ contract AccessCard {
         _;
     }
 
+    function getInfo() public view returns (address info_accessControllerAddress, uint256 info_myPublicKey, bytes32 info_myRole) {
+        tvm.accept();
+        return (accessControllerAddress, myPublicKey, myRole);
+    }
+
     constructor(address _accessControllerAddress, uint256 _myPublicKey, address _superAdminAddress, TvmCell _myInitState) public {
         tvm.accept();
         accessControllerAddress = _accessControllerAddress;
@@ -84,7 +89,7 @@ contract AccessCard {
         roles['MODERATOR'] = true;
         roles['USER'] = true;
 
-        if (msg.sender == _superAdminAddress) { // TODO так можно?
+        if (msg.sender == _superAdminAddress) { // TODO так можно? UBRAT NAHUY I PEREDELAT`
             myRole = 'SUPERADMIN';
         } else {
             myRole = 'USER';
