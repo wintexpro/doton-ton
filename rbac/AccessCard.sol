@@ -2,19 +2,21 @@ pragma solidity >= 0.6.0;
 
 abstract contract IAccessController {
     function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress) external virtual;
-    function getSuperAdminPublicKey() public view virtual returns (uint256);
+    // function getSuperAdminPublicKey() public view virtual returns (uint256);
 }
 
 abstract contract IAccessCard {
     // function touchMe(uint256 pubkey) public virtual;
     function hasRole(bytes32 role) public view virtual returns(bool);
-    function getRole() public view virtual returns (bytes32);
-    function changeRole(bytes32 initiatiorRole, bytes32 role, uint256 touchingPublicKey) public virtual returns (bytes32);
-    function getMyPublicKey() public view virtual returns (uint256);
+    // function getRole() public view virtual returns (bytes32);
+    function changeRole(bytes32 initiatiorRole, bytes32 role, uint256 touchingPublicKey) public virtual;
+    function grantSuperAdmin() external virtual;
+    // function getMyPublicKey() public view virtual returns (uint256);
 }
 
 contract AccessCard {
     address accessControllerAddress;
+    address superAdminAddress;
     uint256 myPublicKey;
     TvmCell myInitState;
 
@@ -74,14 +76,15 @@ contract AccessCard {
         _;
     }
 
-    function getInfo() public view returns (address info_accessControllerAddress, uint256 info_myPublicKey, bytes32 info_myRole) {
+    function getInfo() public view returns (address info_accessControllerAddress, address info_superAdminAddress, uint256 info_myPublicKey, bytes32 info_myRole) {
         tvm.accept();
-        return (accessControllerAddress, myPublicKey, myRole);
+        return (accessControllerAddress, superAdminAddress, myPublicKey, myRole);
     }
 
     constructor(address _accessControllerAddress, uint256 _myPublicKey, address _superAdminAddress, TvmCell _myInitState) public {
         tvm.accept();
         accessControllerAddress = _accessControllerAddress;
+        superAdminAddress = _superAdminAddress;
         myPublicKey = _myPublicKey;
         myInitState = _myInitState;
         roles['SUPERADMIN'] = true;
@@ -89,37 +92,18 @@ contract AccessCard {
         roles['MODERATOR'] = true;
         roles['USER'] = true;
 
-        if (msg.sender == _superAdminAddress) { // TODO так можно? UBRAT NAHUY I PEREDELAT`
-            myRole = 'SUPERADMIN';
-        } else {
-            myRole = 'USER';
-        }
-    }
-
-    /* function touchSome(IAccessCard target) external {
-        tvm.accept();
-        target.touchMe(myPublicKey);
-    }
-
-    function touchMe(uint256 touchingPublicKey) isSameWallet(touchingPublicKey) public virtual { //ПОЧЕМУ НЕ ВЫЗВАТЬ msg.pubkey() вместо передачи ключа?
-        tvm.accept();
-        lastTouched = msg.sender;
-    }
-
-    function info() public view returns (uint256, address) {
-        tvm.accept();
-        return (touched, lastTouched);
-    } */
-
-    /**
-     * @dev Returns current role of this AccessCard
-     */
-    function getMyPublicKey() public view virtual returns (uint256) {
-        tvm.accept();
-        return myPublicKey;
+        myRole = 'USER';
     }
 
     // === Work with roles: ===
+
+    /**
+     * @dev Grant the first superadmin
+     */
+    function grantSuperAdmin() external virtual {
+        require (msg.sender == accessControllerAddress, 107);
+        myRole = 'SUPERADMIN';
+    }
 
     /**
      * @dev Returns `true` if `target` has been granted `role`.
@@ -132,14 +116,14 @@ contract AccessCard {
     /**
      * @dev Grants `role` to `target`
      */
-    function grantRole(bytes32 role, address targetAddress) acceptOnlyOwner() isAdminOrSuperadmin() isRoleExists(role) external {
-        require(targetAddress != address(this),  105, "grantRole: Can not grant role for himself"); // TODO может не нужно, если есть external?
+    function grantRole(bytes32 role, address targetAddress) acceptOnlyOwner() /* isAdminOrSuperadmin() isRoleExists(role) */ external {
+        /* require(targetAddress != address(this),  105, "grantRole: Can not grant role for himself"); // TODO может не нужно, если есть external?
         tvm.accept();
         IAccessCard(targetAddress).changeRole(myRole, role, myPublicKey);
         if (role == 'SUPERADMIN') {
             myRole = 'USER';
             IAccessController(accessControllerAddress).changeAdmin(targetAddress, msg.sender); //TODO видимо так
-        }
+        } */
     }
 
     /**

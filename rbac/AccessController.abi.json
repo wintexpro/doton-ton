@@ -1,0 +1,63 @@
+{
+	"ABI version": 2,
+	"header": ["time"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"_accessCardInitState","type":"cell"},
+				{"name":"_initialValue","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getInfo",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"info_initialValue","type":"uint128"},
+				{"name":"info_myPublicKey","type":"uint256"},
+				{"name":"info_superAdminAddress","type":"address"}
+			]
+		},
+		{
+			"name": "updateInitialValue",
+			"inputs": [
+				{"name":"newInitialValue","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "grantSuperAdminRole",
+			"inputs": [
+				{"name":"accessCardAddress","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "changeAdmin",
+			"inputs": [
+				{"name":"newSuperAdminAddress","type":"address"},
+				{"name":"oldSuperAdminAddress","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "deployAccessCardWithPubkey",
+			"inputs": [
+				{"name":"pubkey","type":"uint256"}
+			],
+			"outputs": [
+				{"name":"deployedContract","type":"address"}
+			]
+		}
+	],
+	"data": [
+	],
+	"events": [
+	]
+}

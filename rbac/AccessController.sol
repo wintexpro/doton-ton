@@ -44,17 +44,13 @@ contract AccessController {
     }
 
     /**
-     * deploySuperAdminContract
+     * Grant the first superadmin
      */
-    function grantSuperAdminRole(address accessCardAddress) acceptOnlyOwner() public returns (address deployedSuperAdminContract, address hui, address addrcalc) {
+    function grantSuperAdminRole(address accessCardAddress) acceptOnlyOwner() public {
         //TODO РАСКОММЕНТИТЬ require(superAdminAddress == address(this), 101, 'Superadmin already created earler');
         tvm.accept();
-        //address superAdminContract = deployAccessCardWithPubkey(futureSuperAdminPublicKey); // деплоим суперадмину AccessCard
-        //TvmCell stateInitWithKey = tvm.insertPubkey(accessCardInitState, futureSuperAdminPublicKey);
-		superAdminAddress = address(tvm.hash(stateInitWithKey));
-        // address superAdminContract = deployAccessCardWithPubkey(futureSuperAdminPublicKey); // деплоим суперадмину AccessCard
-        // address newAccessCard = new AccessCard{stateInit:stateInitWithKey, value:initialValue}(address(this), futureSuperAdminPublicKey, address(tvm.hash(stateInitWithKey)), accessCardInitState);
-        return superAdminAddress;
+		superAdminAddress = accessCardAddress; // address(tvm.hash(stateInitWithKey));
+        IAccessCard(accessCardAddress).grantSuperAdmin();
     }
 
     function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress) acceptOnlySuperAdmin(oldSuperAdminAddress) external virtual {
@@ -64,7 +60,6 @@ contract AccessController {
 
     // создает хоть кто
     function deployAccessCardWithPubkey(uint256 pubkey) public returns (address deployedContract) {
-        // require (role != 'ADMIN', 'To grant admin role use other method');
         tvm.accept();
 		TvmCell stateInitWithKey = tvm.insertPubkey(accessCardInitState, pubkey);
         address newAccessCard = new AccessCard{stateInit:stateInitWithKey, value:initialValue}(address(this), pubkey, superAdminAddress, accessCardInitState);
