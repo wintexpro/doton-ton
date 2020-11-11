@@ -17,6 +17,7 @@ node_modules/
 # Optional eslint cache
 .eslintcache
 # some caller keys
+ton_genkeys/
 *.keys.json
 # tonos-cli config
 tonlabs-cli.conf.json
