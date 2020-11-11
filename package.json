@@ -1,0 +1,22 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "description": "FreeTON contracts repository",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.wintex.pro:ton/contracts.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^7.13.0",
+    "eslint-plugin-mocha": "^8.0.0"
+  }
+}
