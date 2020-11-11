@@ -1,11 +1,13 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const Manager = require('../build/main/Deploy/CreateManager').default;
+/**
+ * Run this tests from root directory: `ton-env test -p ./tests/rbac/rbac.test.js`
+ */
+
 // const { assert } = require('console');
 const fs = require('fs');
 
-describe('Asserts', () => {
+describe('Asserts', function() {
   let manager;
-  beforeEach(async () => {
+  beforeEach(async function() {
     manager = new Manager();
     await manager.CreateClient(['http://localhost:80/graphql']);
     await manager.createKeys();
@@ -21,17 +23,9 @@ describe('Asserts', () => {
       _accessCardInitState: fs.readFileSync('/home/denis/Разное/TON/WintexFreeTonContractsRepository/contracts/rbac/AccessCard.tvc', { encoding: 'base64' }),
       _initialValue: 1000000
     });
-    /* await manager.contracts['15_MessageSender'].DeployContract();
-    await manager.contracts['InitParams'].DeployContract();
-    await manager.contracts['9_PiggyBank_Owner'].DeployContract();
-    await manager.contracts['9_PiggyBank_Stranger'].DeployContract();
-    await manager.contracts['9_PiggyBank'].DeployContract({
-      own: manager.contracts['9_PiggyBank_Owner'].address,
-      lim: 1000000,
-    }); */
   });
 
-  it('test one', async () => {
+  it('test one', async function() {
     const accessCardAbiPath = '/home/denis/Разное/TON/WintexFreeTonContractsRepository/contracts/rbac/AccessCard.abi.json';
 
     // --- Deployment the first AccessCard ---
@@ -41,7 +35,6 @@ describe('Asserts', () => {
     });
     manager.AddContractFromAddress(deployAccessCard1Res.deployedContract, accessCardAbiPath, 'AccessCard1'); // add contract (first AccessCard) to manager
     manager.GiveToAddress(manager.contracts['AccessCard1'].address);
-    console.log('1', deployAccessCard1Res.deployedContract)
     // --- Deployment the second AccessCard ---
     const keysForAccessCard2 = await manager.createKeysAndReturn();
     const deployAccessCard2Res = await manager.contracts['AccessController'].RunContract('deployAccessCardWithPubkey', {
@@ -49,11 +42,9 @@ describe('Asserts', () => {
     });
     manager.AddContractFromAddress(deployAccessCard2Res.deployedContract, accessCardAbiPath, 'AccessCard2'); // add contract (first AccessCard) to manager
     manager.GiveToAddress(manager.contracts['AccessCard2'].address);
-    console.log('2', deployAccessCard2Res.deployedContract)
     // call getInfo from first AccessCard
     let accessCard1_getInfo = await manager.contracts['AccessCard1'].RunContract('getInfo', {}, keysForAccessCard1);
     assert.equal(fromHexWith0x(accessCard1_getInfo.info_myRole), 'USER'); // check that myRole is USER
-
     // call getInfo from second AccessCard
     let accessCard2_getInfo = await manager.contracts['AccessCard2'].RunContract('getInfo', {}, keysForAccessCard2);
     assert.equal(fromHexWith0x(accessCard2_getInfo.info_myRole), 'USER'); // check that myRole is USER
