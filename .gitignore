@@ -1,2 +1,4 @@
 # some caller keys
 *.keys.json
+# tonos-cli config
+tonlabs-cli.conf.json
