@@ -20,6 +20,10 @@ contract AccessCard {
     uint256 myPublicKey;
     TvmCell myInitState;
 
+    bytes32 SUPERADMIN;
+    bytes32 ADMIN;
+    bytes32 MODERATOR;
+    bytes32 USER;
     mapping(bytes32 => bool) public roles;
     bytes32 myRole;
     
@@ -46,7 +50,7 @@ contract AccessCard {
      * Only admins or superadmin can grant roles
      */
     modifier isAdminOrSuperadmin() {
-        require(hasRole('ADMIN') || hasRole('SUPERADMIN'), 101, "Sender must be an admin or superadmin");
+        require(hasRole(ADMIN) || hasRole(SUPERADMIN), 101, "Sender must be an admin or superadmin");
         tvm.accept();
         _;
     }
@@ -55,13 +59,13 @@ contract AccessCard {
      * Checks that granting is correct
      */
     modifier isCorrectGranting(bytes32 initatorRole, bytes32 newRole) {
-        if (initatorRole == 'ADMIN') {
-            require(newRole == 'USER' || newRole == 'MODERATOR', 103, "Admin can not grant this role");
-            require(hasRole('USER') || hasRole('MODERATOR'), 102, "Insuitable target role");
+        if (initatorRole == ADMIN) {
+            require(newRole == USER || newRole == MODERATOR, 103, "Admin can not grant this role");
+            require(hasRole(USER) || hasRole(MODERATOR), 102, "Insuitable target role");
         } else // TODO можно объединить два условия выше в один require.
-        if (initatorRole == 'SUPERADMIN') {
+        if (initatorRole == SUPERADMIN) {
             // require(role == 'USER' || role == 'ADMIN', "Superadmin can not grant this role");
-            require(hasRole('USER') || hasRole('ADMIN'), 102, "Insuitable target role");
+            require(hasRole(USER) || hasRole(ADMIN), 102, "Insuitable target role");
         }
         tvm.accept();
         _;
@@ -76,6 +80,12 @@ contract AccessCard {
         _;
     }
 
+    function test(bytes32 role) public returns (bool p1, bool p2, bool p3, bytes32 input_param, bytes32 _s, bool equal_s) {
+        tvm.accept();
+        bytes32 s = 'SUPERADMIN';
+        return (roles[role], roles['hui'], roles['SUPERADMIN'], role, s, s == role);
+    }
+
     function getInfo() public view returns (address info_accessControllerAddress, address info_superAdminAddress, uint256 info_myPublicKey, bytes32 info_myRole) {
         tvm.accept();
         return (accessControllerAddress, superAdminAddress, myPublicKey, myRole);
@@ -87,12 +97,17 @@ contract AccessCard {
         superAdminAddress = _superAdminAddress;
         myPublicKey = _myPublicKey;
         myInitState = _myInitState;
-        roles['SUPERADMIN'] = true;
-        roles['ADMIN'] = true;
-        roles['MODERATOR'] = true;
-        roles['USER'] = true;
 
-        myRole = 'USER';
+        SUPERADMIN = 'SUPERADMIN';
+        ADMIN = 'ADMIN';
+        MODERATOR = 'MODERATOR';
+        USER = 'USER';
+        roles[SUPERADMIN] = true;
+        roles[ADMIN] = true;
+        roles[MODERATOR] = true;
+        roles[USER] = true;
+
+        myRole = USER;
     }
 
     // === Work with roles: ===
@@ -116,14 +131,14 @@ contract AccessCard {
     /**
      * @dev Grants `role` to `target`
      */
-    function grantRole(bytes32 role, address targetAddress) acceptOnlyOwner() /* isAdminOrSuperadmin() isRoleExists(role) */ external {
-        /* require(targetAddress != address(this),  105, "grantRole: Can not grant role for himself"); // TODO может не нужно, если есть external?
+    function grantRole(bytes32 role, address targetAddress) acceptOnlyOwner() isAdminOrSuperadmin() isRoleExists(role) external {
+        require(targetAddress != address(this),  105, "grantRole: Can not grant role for himself"); // TODO может не нужно, если есть external?
         tvm.accept();
         IAccessCard(targetAddress).changeRole(myRole, role, myPublicKey);
-        if (role == 'SUPERADMIN') {
-            myRole = 'USER';
+        if (role == SUPERADMIN) {
+            myRole = USER;
             IAccessController(accessControllerAddress).changeAdmin(targetAddress, msg.sender); //TODO видимо так
-        } */
+        }
     }
 
     /**

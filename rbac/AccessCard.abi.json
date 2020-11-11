@@ -14,6 +14,20 @@
 			]
 		},
 		{
+			"name": "test",
+			"inputs": [
+				{"name":"role","type":"uint256"}
+			],
+			"outputs": [
+				{"name":"p1","type":"bool"},
+				{"name":"p2","type":"bool"},
+				{"name":"p3","type":"bool"},
+				{"name":"input_param","type":"uint256"},
+				{"name":"_s","type":"uint256"},
+				{"name":"equal_s","type":"bool"}
+			]
+		},
+		{
 			"name": "getInfo",
 			"inputs": [
 			],
