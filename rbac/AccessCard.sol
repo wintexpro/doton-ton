@@ -41,7 +41,7 @@ contract AccessCard {
      * Modifier that allows public function to accept external calls only from owner
      */
     modifier acceptOnlyOwner {
-        require(tvm.pubkey() == msg.pubkey());
+        require(tvm.pubkey() == msg.pubkey(), 108);
         tvm.accept();
         _;
     }
@@ -80,16 +80,6 @@ contract AccessCard {
         _;
     }
 
-    function test(bytes32 role) public returns (bool p1, bool p2, bool p3, bytes32 input_param, bytes32 _s, bool equal_s) {
-        tvm.accept();
-        bytes32 s = 'SUPERADMIN';
-        return (roles[role], roles['hui'], roles['SUPERADMIN'], role, s, s == role);
-    }
-
-    function getInfo() public view returns (address info_accessControllerAddress, address info_superAdminAddress, uint256 info_myPublicKey, bytes32 info_myRole) {
-        tvm.accept();
-        return (accessControllerAddress, superAdminAddress, myPublicKey, myRole);
-    }
 
     constructor(address _accessControllerAddress, uint256 _myPublicKey, address _superAdminAddress, TvmCell _myInitState) public {
         tvm.accept();

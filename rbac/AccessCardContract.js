@@ -18,31 +18,6 @@ const abi = {
 			]
 		},
 		{
-			"name": "test",
-			"inputs": [
-				{"name":"role","type":"uint256"}
-			],
-			"outputs": [
-				{"name":"p1","type":"bool"},
-				{"name":"p2","type":"bool"},
-				{"name":"p3","type":"bool"},
-				{"name":"input_param","type":"uint256"},
-				{"name":"_s","type":"uint256"},
-				{"name":"equal_s","type":"bool"}
-			]
-		},
-		{
-			"name": "getInfo",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"info_accessControllerAddress","type":"address"},
-				{"name":"info_superAdminAddress","type":"address"},
-				{"name":"info_myPublicKey","type":"uint256"},
-				{"name":"info_myRole","type":"uint256"}
-			]
-		},
-		{
 			"name": "grantSuperAdmin",
 			"inputs": [
 			],
@@ -102,7 +77,7 @@ const abi = {
 
 const pkg = {
     abi,
-    imageBase64: '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',
+    imageBase64: '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',
 };
 
 class AccessCardContract {
@@ -170,58 +145,6 @@ class AccessCardContract {
             keyPair: this.keys,
         });
         return result.output;
-    }
-
-    /**
-     * @typedef AccessCardContract_test
-     * @type {object}
-     * @property {bool} p1 
-     * @property {bool} p2 
-     * @property {bool} p3 
-     * @property {string} input_param  (uint256)
-     * @property {string} _s  (uint256)
-     * @property {bool} equal_s 
-     */
-
-    /**
-     * @param {object} params
-     * @param {string} params.role (uint256)
-     * @return {Promise.<AccessCardContract_test>}
-     */
-    test(params) {
-        return this.run('test', params);
-    }
-
-    /**
-     * @param {object} params
-     * @param {string} params.role (uint256)
-     * @return {Promise.<AccessCardContract_test>}
-     */
-    testLocal(params) {
-        return this.runLocal('test', params);
-    }
-
-    /**
-     * @typedef AccessCardContract_getInfo
-     * @type {object}
-     * @property {string} info_accessControllerAddress  (address)
-     * @property {string} info_superAdminAddress  (address)
-     * @property {string} info_myPublicKey  (uint256)
-     * @property {string} info_myRole  (uint256)
-     */
-
-    /**
-     * @return {Promise.<AccessCardContract_getInfo>}
-     */
-    getInfo() {
-        return this.run('getInfo', {});
-    }
-
-    /**
-     * @return {Promise.<AccessCardContract_getInfo>}
-     */
-    getInfoLocal() {
-        return this.runLocal('getInfo', {});
     }
 
     /**
