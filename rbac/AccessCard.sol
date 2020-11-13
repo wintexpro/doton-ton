@@ -123,6 +123,14 @@ contract AccessCard {
     /**
      * @dev Returns `true` if `target` has been granted `role`.
      */
+    function getRole() public view virtual returns (bytes32 my_role) {
+        tvm.accept();
+        return myRole;
+    }
+
+    /**
+     * @dev Returns `true` if `target` has been granted `role`.
+     */
     function hasRole(bytes32 role) public view virtual returns (bool) {
         tvm.accept();
         return myRole == role;

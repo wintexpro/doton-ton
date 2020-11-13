@@ -9,7 +9,6 @@ import "AccessCard.sol";
 contract AccessController {
     TvmCell accessCardInitState;
     uint128 initialValue; // количество токенов, которое необходимо отправить, чтобы задеплоить контракт AccesCard
-    uint256 myPublicKey; // AccessController public key 
     
     address superAdminAddress; // super-admin public key. Только один AccessCard может иметь роль super-admin.
 
@@ -21,7 +20,7 @@ contract AccessController {
 
     // Modifier that allows public function to accept external calls only from RelayNodeF.
     modifier acceptOnlyOwner {
-        require(tvm.pubkey() == msg.pubkey());
+        require(tvm.pubkey() == msg.pubkey(), 102, 'Only for owners');
         tvm.accept();
         _;
     }
@@ -30,30 +29,35 @@ contract AccessController {
         tvm.accept();
         accessCardInitState = _accessCardInitState;
         initialValue = _initialValue; // TODO логику с этим полем
-        myPublicKey = tvm.pubkey();//TODO зачем _myPublicKey, разве нельзя tvm.pubkey()?; // TODO теперь скорее всего не нужен
         superAdminAddress = address(this);
     }
 
-    function getInfo() public view returns (uint128 info_initialValue, uint256 info_myPublicKey, address info_superAdminAddress) {
+    function getInitialValue() view external returns (uint128) {
         tvm.accept();
-        return (initialValue, myPublicKey, superAdminAddress);
+        return initialValue;
     }
 
-    function updateInitialValue(uint128 newInitialValue) acceptOnlyOwner() external {
+    function updateInitialValue(uint128 newInitialValue) acceptOnlyOwner() external { // TODO непонятно, излишен ли acceptOnlyOwner в функциях external без public
         initialValue = newInitialValue;
     }
 
     /**
      * Grant the first superadmin
      */
-    function grantSuperAdminRole(address accessCardAddress) acceptOnlyOwner() public {
-        //TODO РАСКОММЕНТИТЬ require(superAdminAddress == address(this), 101, 'Superadmin already created earler');
+    function grantSuperAdminRole(address accessCardAddress) acceptOnlyOwner() external {
+        require(superAdminAddress == address(this), 101, 'Superadmin already created earler');
         tvm.accept();
 		superAdminAddress = accessCardAddress; // address(tvm.hash(stateInitWithKey));
         IAccessCard(accessCardAddress).grantSuperAdmin();
     }
 
+    function getSuperAdminAddress() view external returns (address) {
+        tvm.accept();
+        return superAdminAddress;
+    }
+
     function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress) acceptOnlySuperAdmin(oldSuperAdminAddress) external virtual {
+        require(tvm.pubkey() != msg.pubkey(), 103, 'Only by another contracts');
         tvm.accept();
         superAdminAddress = newSuperAdminAddress;
     }

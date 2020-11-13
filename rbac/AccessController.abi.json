@@ -12,13 +12,11 @@
 			]
 		},
 		{
-			"name": "getInfo",
+			"name": "getInitialValue",
 			"inputs": [
 			],
 			"outputs": [
-				{"name":"info_initialValue","type":"uint128"},
-				{"name":"info_myPublicKey","type":"uint256"},
-				{"name":"info_superAdminAddress","type":"address"}
+				{"name":"value0","type":"uint128"}
 			]
 		},
 		{
@@ -35,6 +33,14 @@
 				{"name":"accessCardAddress","type":"address"}
 			],
 			"outputs": [
+			]
+		},
+		{
+			"name": "getSuperAdminAddress",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
 			]
 		},
 		{

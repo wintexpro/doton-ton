@@ -46,6 +46,14 @@
 			]
 		},
 		{
+			"name": "getRole",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"my_role","type":"uint256"}
+			]
+		},
+		{
 			"name": "hasRole",
 			"inputs": [
 				{"name":"role","type":"uint256"}
