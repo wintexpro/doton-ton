@@ -11,5 +11,9 @@
     "extends": [
         "standard",
         "plugin:mocha/recommended"
-    ]
+    ],
+    "globals": {
+        "Manager": "readonly",
+        "restart": "readonly"
+    }
 }
