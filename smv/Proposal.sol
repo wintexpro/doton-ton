@@ -35,8 +35,8 @@ contract Proposal {
     }
 
     // TODO or not internal?
-    function vote(uint8 choice, uint256 ballotPublicKey) internal isValidBallot(choice, ballotPublicKey) {
+    function vote(uint8 choice, uint256 ballotPublicKey) external isValidBallot(choice, ballotPublicKey) {
         votes[choice]++;
     }
-
+ 
 }
