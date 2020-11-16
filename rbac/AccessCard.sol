@@ -26,7 +26,7 @@ contract AccessCard {
     bytes32 USER;
     mapping(bytes32 => bool) public roles;
     bytes32 myRole;
-    
+
     /*
      * Проверяет, что вызываемый текущим контрактом контракт имеет такой же init state
      */
@@ -62,10 +62,6 @@ contract AccessCard {
         if (initatorRole == ADMIN) {
             require(newRole == USER || newRole == MODERATOR, 103, "Admin can not grant this role");
             require(hasRole(USER) || hasRole(MODERATOR), 102, "Insuitable target role");
-        } else // TODO можно объединить два условия выше в один require.
-        if (initatorRole == SUPERADMIN) {
-            // require(role == 'USER' || role == 'ADMIN', "Superadmin can not grant this role");
-            require(hasRole(USER) || hasRole(ADMIN), 102, "Insuitable target role");
         }
         tvm.accept();
         _;
@@ -151,9 +147,10 @@ contract AccessCard {
      * - superadmin can not to renounce role 
      */
     function deactivateHimself() acceptOnlyOwner() public {
-        require(myRole != 'SUPERADMIN',  106, "Superadmin can not to deactivate himself");
+        require(myRole != USER, 109, 'Already deactivated');
+        require(myRole != SUPERADMIN,  106, "Superadmin can not to deactivate himself");
         tvm.accept();
-        myRole = 'USER';
+        myRole = USER;
     }
 
     /**
