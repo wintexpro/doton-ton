@@ -18,7 +18,7 @@
   "devDependencies": {
     "babel-eslint": "^10.1.0",
     "eslint": "^7.13.0",
-    "eslint-plugin-mocha": "^8.0.0",
-    "fs": "0.0.1-security"
-  }
+    "eslint-plugin-mocha": "^8.0.0"
+  },
+  "dependencies": {}
 }

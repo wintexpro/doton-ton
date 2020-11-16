@@ -1,8 +1,15 @@
 /**
- * Run this tests from root directory: `ton-env test -p ./tests/rbac/rbac.test.js`
+ * Tests: contract AccessCards.
+ * 
+ * Run this tests from root directory: `ton-env test -p ./tests/rbac/<current file name>.test.js`
  */
 
 const fs = require('fs');
+const path = require('path');
+const fromHexWith0x = require('../helper').fromHexWith0x;
+const toHex = require('../helper').toHex;
+
+const accessCardAbiPath = path.join(__dirname, '../../rbac/AccessCard.abi.json');
 
 describe('Asserts', function() {
   let manager;
@@ -17,54 +24,47 @@ describe('Asserts', function() {
     await manager.CreateClient(['http://localhost:80/graphql']);
     await manager.createKeys();
     manager.loadContract(
-      '/home/denis/Разное/TON/WintexFreeTonContractsRepository/contracts/rbac/AccessController.tvc',
-      '/home/denis/Разное/TON/WintexFreeTonContractsRepository/contracts/rbac/AccessController.abi.json'
+      path.join(__dirname, '../../rbac/AccessController.tvc'),
+      path.join(__dirname, '../../rbac/AccessController.abi.json')
     );
     manager.loadContract(
-      '/home/denis/Разное/TON/WintexFreeTonContractsRepository/contracts/rbac/AccessCard.tvc',
-      '/home/denis/Разное/TON/WintexFreeTonContractsRepository/contracts/rbac/AccessCard.abi.json'
+      path.join(__dirname, '../../rbac/AccessCard.tvc'),
+      path.join(__dirname, '../../rbac/AccessCard.abi.json')
     );
     await manager.contracts['AccessController'].DeployContract({
-      _accessCardInitState: fs.readFileSync('/home/denis/Разное/TON/WintexFreeTonContractsRepository/contracts/rbac/AccessCard.tvc', { encoding: 'base64' }),
+      _accessCardInitState: fs.readFileSync(path.join(__dirname, '../../rbac/AccessCard.tvc'), { encoding: 'base64' }),
       _initialValue: 1000000
     });
-    // await manager.GiveToAddress(manager.contracts['AccessController'].address);
   });
-
-  const accessCardAbiPath = '/home/denis/Разное/TON/WintexFreeTonContractsRepository/contracts/rbac/AccessCard.abi.json';
   
   /**
    * Deploy AccessCard from AccessController
    */
-  async function deployAccessCardFromAccessController(contractName) {
+  async function deployAccessCardFromAccessController(contractName, assertThatDeployed = true) {
     const keyPair = await manager.createKeysAndReturn();
     const deployAccessCardRes = await manager.contracts['AccessController'].RunContract('deployAccessCardWithPubkey', {
       pubkey: '0x' + keyPair.public,
     });
     manager.AddContractFromAddress(deployAccessCardRes.deployedContract, accessCardAbiPath, contractName); // add contract to manager
+    if (assertThatDeployed) {
+      assert.deepStrictEqual(manager.contracts[contractName].isDeployed, true);
+    }
     return keyPair;
   }
 
-  it('Test: grantSuperAdmin - forbid call by not contract with `accessControllerAddress`', async function() {
+  it('Test: grantSuperAdmin - should forbid call by not contract with `accessControllerAddress`', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
 
     let error;
     await manager.contracts['AccessCard1'].RunContract('grantSuperAdmin', {}, keysForAccessCard1).catch(e => error = e);
     assert.deepStrictEqual(error.data.exit_code, 107);
   });
 
-  it('Test: grantSuperAdmin - Calling from AccessController should change role on `SUPERADMIN`', async function() {
-    // --- Deployment the first AccessCard ---
+  it('Test: grantSuperAdmin - calling from AccessController should change role on `SUPERADMIN`', async function() {
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
     const getRoleBeforeGrantingRes = await manager.contracts['AccessCard1'].RunContract('getRole', {}, keysForAccessCard1);
     assert.deepStrictEqual(fromHexWith0x(getRoleBeforeGrantingRes.my_role), 'USER');
-
-    /* // --- Deployment the second AccessCard ---
-    const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2');
-    assert.deepStrictEqual(manager.contracts['AccessCard2'].isDeployed, true); */
 
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
@@ -78,7 +78,6 @@ describe('Asserts', function() {
   it('Test: grantRole (+ getRole) - should change role by superadmin to another user', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard1'].address,
@@ -86,7 +85,6 @@ describe('Asserts', function() {
 
     // --- Deployment the second AccessCard ---
     const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2');
-    assert.deepStrictEqual(manager.contracts['AccessCard2'].isDeployed, true);
     // check that role before change
     const getRoleBeforeGrantingRes = await manager.contracts['AccessCard2'].RunContract('getRole', {}, keysForAccessCard2);
     assert.deepStrictEqual(fromHexWith0x(getRoleBeforeGrantingRes.my_role), 'USER');
@@ -101,13 +99,11 @@ describe('Asserts', function() {
     // check that role changed
     const getRoleAfterGrantingRes = await manager.contracts['AccessCard2'].RunContract('getRole', {}, keysForAccessCard2);
     assert.deepStrictEqual(fromHexWith0x(getRoleAfterGrantingRes.my_role), 'ADMIN');
-
   });
 
   it('Test: grantRole (+ getRole) - should throw exception if try to grant role by himself', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard1'].address,
@@ -134,10 +130,8 @@ describe('Asserts', function() {
   it('Test: grantRole (+ getRole) - should throw exception if try to grant role by not current AccessCard owner', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
     // --- Deployment the second AccessCard ---
     const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2');
-    assert.deepStrictEqual(manager.contracts['AccessCard2'].isDeployed, true);
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard1'].address,
@@ -164,10 +158,8 @@ describe('Asserts', function() {
   it('Test: grantRole (+ getRole) - should throw exception if contract has not role `ADMIN` or `SUPERADMIN`. Case 1: Contract role is `USER`', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
     // --- Deployment the second AccessCard ---
     const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2');
-    assert.deepStrictEqual(manager.contracts['AccessCard2'].isDeployed, true);
 
     // get target AccessCard role before change
     const getRoleBeforeGrantingRes = await manager.contracts['AccessCard2'].RunContract('getRole', {}, keysForAccessCard2);
@@ -190,13 +182,10 @@ describe('Asserts', function() {
   it('Test: grantRole (+ getRole) - should throw exception if contract has not role `ADMIN` or `SUPERADMIN`. Case 2: Contract role is `MODERATOR`', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
     // --- Deployment the second AccessCard ---
     const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2');
-    assert.deepStrictEqual(manager.contracts['AccessCard2'].isDeployed, true);
     // --- Deployment the third AccessCard ---
     const keysForAccessCard3 = await deployAccessCardFromAccessController('AccessCard3');
-    assert.deepStrictEqual(manager.contracts['AccessCard3'].isDeployed, true);
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard1'].address,
@@ -239,10 +228,8 @@ describe('Asserts', function() {
   it('Test: grantRole (+ getRole) - should throw exception if try to grant incorrect role', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
     // --- Deployment the second AccessCard ---
     const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2');
-    assert.deepStrictEqual(manager.contracts['AccessCard2'].isDeployed, true);
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard1'].address,
@@ -269,13 +256,10 @@ describe('Asserts', function() {
   it('Test: grantRole (+ getRole, + onBounce) - should not change target role if you can not grant this role', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
     // --- Deployment the second AccessCard ---
     const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2');
-    assert.deepStrictEqual(manager.contracts['AccessCard2'].isDeployed, true);
     // --- Deployment the third AccessCard ---
     const keysForAccessCard3 = await deployAccessCardFromAccessController('AccessCard3');
-    assert.deepStrictEqual(manager.contracts['AccessCard3'].isDeployed, true);
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard1'].address,
@@ -323,13 +307,10 @@ describe('Asserts', function() {
   it('Test: grantRole (+ getRole, + onBounce) - should not change target role if you can not grant this role because target role insuitable', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
     // --- Deployment the second AccessCard ---
     const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2');
-    assert.deepStrictEqual(manager.contracts['AccessCard2'].isDeployed, true);
     // --- Deployment the third AccessCard ---
     const keysForAccessCard3 = await deployAccessCardFromAccessController('AccessCard3');
-    assert.deepStrictEqual(manager.contracts['AccessCard3'].isDeployed, true);
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard1'].address,
@@ -388,7 +369,6 @@ describe('Asserts', function() {
   it('Test: hasRole - should return correct value', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
     // cases: role USER
     const case1Res = await manager.contracts['AccessCard1'].RunContract('hasRole', { role: toHex('USER') }, keysForAccessCard1);
     assert.ok(case1Res.value0);
@@ -417,13 +397,10 @@ describe('Asserts', function() {
   it('Test: deactivateHimself - should deactivate (set role to USER)', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
     // --- Deployment the second AccessCard ---
     const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2');
-    assert.deepStrictEqual(manager.contracts['AccessCard2'].isDeployed, true);
     // --- Deployment the third AccessCard ---
     const keysForAccessCard3 = await deployAccessCardFromAccessController('AccessCard3');
-    assert.deepStrictEqual(manager.contracts['AccessCard3'].isDeployed, true);
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard1'].address,
@@ -464,7 +441,6 @@ describe('Asserts', function() {
   it('Test: deactivateHimself - should throw error exception if try to deactivate deactivated AccessCard (by `USER`)', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
 
     let error;
     await manager.contracts['AccessCard1'].RunContract('deactivateHimself', {}, keysForAccessCard1).catch(e=> error = e);
@@ -477,7 +453,6 @@ describe('Asserts', function() {
   it('Test: deactivateHimself - should throw error exception if try to deactivate by `SUPERADMIN`', async function() {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1');
-    assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true);
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard1'].address,
@@ -492,11 +467,4 @@ describe('Asserts', function() {
   });
 });
 
-function fromHexWith0x(_string) {
-  return Buffer.from(_string.substring(2), 'hex').toString('utf8')
-}
-
-function toHex(_string, isWith0x = true) {
-  return (isWith0x ? '0x' : '') + Buffer.from(_string, 'utf8').toString('hex')
-}
 

@@ -1,14 +1,18 @@
 /**
- * Run this tests from root directory: `ton-env test -p ./tests/rbac/rbac.test.js`
+ * Tests: contract AccessController.
+ * 
+ * Run this tests from root directory: `ton-env test -p ./tests/rbac/<current file name>.test.js`
  */
 
 const fs = require('fs');
+const path = require('path');
+const { toHex } = require('../helper');
+
+const accessCardAbiPath = path.join(__dirname, '../../rbac/AccessCard.abi.json');
+const accessCardTvcPath = path.join(__dirname, '../../rbac/AccessCard.tvc');
 
 describe('RBAC: AccessController', function() {
   let manager;
-
-  const accessCardAbiPath = '/home/denis/Разное/TON/WintexFreeTonContractsRepository/contracts/rbac/AccessCard.abi.json';
-  const accessCardTvcPath = '/home/denis/Разное/TON/WintexFreeTonContractsRepository/contracts/rbac/AccessCard.tvc';
   
   before(async function () {
     console.log('Start..');
@@ -20,14 +24,13 @@ describe('RBAC: AccessController', function() {
     await manager.CreateClient(['http://localhost:80/graphql']);
     await manager.createKeys();
     manager.loadContract(
-      '/home/denis/Разное/TON/WintexFreeTonContractsRepository/contracts/rbac/AccessController.tvc',
-      '/home/denis/Разное/TON/WintexFreeTonContractsRepository/contracts/rbac/AccessController.abi.json'
+      path.join(__dirname, '../../rbac/AccessController.tvc'),
+      path.join(__dirname, '../../rbac/AccessController.abi.json')
     );
     manager.loadContract(
       accessCardTvcPath,
       accessCardAbiPath
     );
-    // await manager.GiveToAddress(manager.contracts['AccessController'].address);
   });
 
   it('Test: Should deploy AccessController', async function() {
@@ -44,7 +47,7 @@ describe('RBAC: AccessController', function() {
       _initialValue: 1000000
     });
     const superAdminAddressRes = await manager.contracts['AccessController'].RunContract('getSuperAdminAddress', {});
-    assert.equal(superAdminAddressRes.value0, manager.contracts['AccessController'].address);
+    assert.deepStrictEqual(superAdminAddressRes.value0, manager.contracts['AccessController'].address);
   });
   
   it('Test: getInitialValue - should return correct value that was specified on deployment', async function() {
@@ -122,14 +125,14 @@ describe('RBAC: AccessController', function() {
 
     // check superAdminAddress before granting
     const superAdminAddressRes = await manager.contracts['AccessController'].RunContract('getSuperAdminAddress', {});
-    assert.equal(superAdminAddressRes.value0, manager.contracts['AccessController'].address);
+    assert.deepStrictEqual(superAdminAddressRes.value0, manager.contracts['AccessController'].address);
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard1'].address,
     });
     // check superAdminAddress after granting
     const superAdminAddressAfterGrantingRes = await manager.contracts['AccessController'].RunContract('getSuperAdminAddress', {});
-    assert.equal(superAdminAddressAfterGrantingRes.value0, manager.contracts['AccessCard1'].address);
+    assert.deepStrictEqual(superAdminAddressAfterGrantingRes.value0, manager.contracts['AccessCard1'].address);
   });
 
   it('Test: grantSuperAdminRole - should forbid to grant superadmin by not admin', async function() {
@@ -176,7 +179,7 @@ describe('RBAC: AccessController', function() {
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard1'].address,
     }).catch(e => error = e);
-    assert.equal(error.data.exit_code, 101);
+    assert.deepStrictEqual(error.data.exit_code, 101);
 
     // deploy second AccessCard
     const keysForAccessCard2 = await manager.createKeysAndReturn();
@@ -191,11 +194,11 @@ describe('RBAC: AccessController', function() {
     await manager.contracts['AccessController'].RunContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard2'].address,
     }).catch(e => error = e);
-    assert.equal(error.data.exit_code, 101);
+    assert.deepStrictEqual(error.data.exit_code, 101);
 
     // check that superAdminAddress not changed
     const superAdminAddressRes = await manager.contracts['AccessController'].RunContract('getSuperAdminAddress', {});
-    assert.equal(superAdminAddressRes.value0, manager.contracts['AccessCard1'].address);
+    assert.deepStrictEqual(superAdminAddressRes.value0, manager.contracts['AccessCard1'].address);
   });
   
   it('Test: changeAdmin - should forbid to call by himself', async function() {
@@ -214,18 +217,11 @@ describe('RBAC: AccessController', function() {
     await manager.contracts['AccessController'].RunContract('changeAdmin', {
       newSuperAdminAddress: wallet.address,
       oldSuperAdminAddress: manager.contracts['AccessController'].address,
+      value2: toHex('USER')
     }).catch(e => error = e);
-    assert.equal(error.data.exit_code, 103);
-
+    assert.deepStrictEqual(error.data.exit_code, 103);
   });
 
 });
 
-function fromHexWith0x(_string) {
-  return Buffer.from(_string.substring(2), 'hex').toString('utf8')
-}
-
-function toHex(_string, isWith0x = true) {
-  return (isWith0x ? '0x' : '') + Buffer.from(_string, 'utf8').toString('hex')
-}
 

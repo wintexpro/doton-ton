@@ -56,7 +56,11 @@ contract AccessController {
         return superAdminAddress;
     }
 
-    function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress) acceptOnlySuperAdmin(oldSuperAdminAddress) external virtual {
+    /**
+     * Change the superadmin. Called by contract AccessCard
+     * param value2 (third parameter) - previous role of target. Needed for onBounce in AccessCard (to back old role if current method was failed)
+     */
+    function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress, bytes32 /* previousTargetRole */) acceptOnlySuperAdmin(oldSuperAdminAddress) external virtual {
         require(tvm.pubkey() != msg.pubkey(), 103, 'Only by another contracts');
         tvm.accept();
         superAdminAddress = newSuperAdminAddress;

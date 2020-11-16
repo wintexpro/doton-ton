@@ -1,7 +1,7 @@
 pragma solidity >= 0.6.0;
 
 abstract contract IAccessController {
-    function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress) external virtual;
+    function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress, bytes32 /* previousTargetRole */) external virtual;
     // function getSuperAdminPublicKey() public view virtual returns (uint256);
 }
 
@@ -131,7 +131,6 @@ contract AccessCard {
         IAccessCard(targetAddress).changeRole(myRole, role, myPublicKey);
         if (role == SUPERADMIN) {
             myRole = USER;
-            IAccessController(accessControllerAddress).changeAdmin(targetAddress, msg.sender); //TODO видимо так
         }
     }
 
@@ -140,6 +139,9 @@ contract AccessCard {
      */
     function changeRole(bytes32 initiatiorRole, bytes32 role, uint256 touchingPublicKey) isSameWallet(touchingPublicKey) isRoleExists(role) isCorrectGranting(initiatiorRole, role) public virtual {
         _changeRole(role);
+        if (role == SUPERADMIN) {
+            IAccessController(accessControllerAddress).changeAdmin(address(this), msg.sender, myRole); //TODO видимо так
+        }
     }
 
     /**
@@ -182,8 +184,12 @@ contract AccessCard {
             if (param_initiatiorRole == "SUPERADMIN" && param_role == "SUPERADMIN") {
                 myRole = "SUPERADMIN";
             }
-		} /* else if (functionId == tvm.functionId(AnotherContract.receiveValues)) {
-			(invalidValue1, invalidValue2, invalidValue3) = slice.decodeFunctionParams(AnotherContract.receiveValues);
-		} */
+		} else if (functionId == tvm.functionId(IAccessController.changeAdmin)) {
+            address param_newSuperAdminAddress;
+            address param_oldSuperAdminAddress;
+            bytes32 param_previousTargetRole;
+			(param_newSuperAdminAddress, param_oldSuperAdminAddress, param_previousTargetRole) = slice.decodeFunctionParams(IAccessController.changeAdmin);
+            myRole = param_previousTargetRole;
+		}
 	}
 }
