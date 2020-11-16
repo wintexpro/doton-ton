@@ -17,6 +17,10 @@ contract Ballot {
         proposal.vote(choice, tvm.pubkey());
     }
 
+    function getInfo() public view returns (bool, address) {
+        return (isUsed, usedFor);
+    }
+
     onBounce(TvmSlice slice) external {
         uint32 functionId = slice.decode(uint32);
         if (functionId == tvm.functionId(IProposal.vote)) {
