@@ -1,7 +1,7 @@
 pragma solidity >= 0.6.0;
 
-import "AccessCard.sol";
 
+import "./AccessCard.sol";
 /* 
  * Контракт хранит код контракта AccessCard, деплоит в сеть контракты AccessCard.
  * Формально является мостом между вызывающим AccessCard и вызываемым
@@ -13,7 +13,7 @@ contract AccessController {
     address superAdminAddress; // super-admin public key. Только один AccessCard может иметь роль super-admin.
 
     modifier acceptOnlySuperAdmin(address _address) {
-        require(superAdminAddress == _address);
+        require(superAdminAddress == _address, 104);
         tvm.accept();
         _;
     }
@@ -60,8 +60,8 @@ contract AccessController {
      * Change the superadmin. Called by contract AccessCard
      * param value2 (third parameter) - previous role of target. Needed for onBounce in AccessCard (to back old role if current method was failed)
      */
-    function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress, bytes32 /* previousTargetRole */) acceptOnlySuperAdmin(oldSuperAdminAddress) external virtual {
-        require(tvm.pubkey() != msg.pubkey(), 103, 'Only by another contracts');
+    function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress, bytes32 /* previousTargetRole */) acceptOnlySuperAdmin(oldSuperAdminAddress) external {
+        require(tvm.pubkey() != msg.pubkey(), 103); // 'Only by another contracts' // а можно ли как-то протестить onBounce этой функции? По аналогии как я тестил grantRole в AccessCard. Как попать в кейс, когда сюда пропустит несуперадмина (только тогда можно будет поймать onBounce)?
         tvm.accept();
         superAdminAddress = newSuperAdminAddress;
     }

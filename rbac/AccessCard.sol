@@ -1,17 +1,14 @@
 pragma solidity >= 0.6.0;
-
-abstract contract IAccessController {
-    function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress, bytes32 /* previousTargetRole */) external virtual;
-    // function getSuperAdminPublicKey() public view virtual returns (uint256);
+/* import "./lib/BetterRequire.sol";
+ */
+interface IAccessController {
+    function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress, bytes32 /* previousTargetRole */) external;
 }
 
-abstract contract IAccessCard {
-    // function touchMe(uint256 pubkey) public virtual;
-    function hasRole(bytes32 role) public view virtual returns(bool);
-    // function getRole() public view virtual returns (bytes32);
-    function changeRole(bytes32 initiatiorRole, bytes32 role, uint256 touchingPublicKey) public virtual;
-    function grantSuperAdmin() external virtual;
-    // function getMyPublicKey() public view virtual returns (uint256);
+interface IAccessCard {
+    // function hasRole(bytes32 role) external view returns(bool);
+    function changeRole(bytes32 initiatiorRole, bytes32 role, uint256 touchingPublicKey) external;
+    function grantSuperAdmin() external;
 }
 
 contract AccessCard {
@@ -27,43 +24,38 @@ contract AccessCard {
     mapping(bytes32 => bool) public roles;
     bytes32 myRole;
 
+    // debug variables
+    bytes32 param_previousTargetRole_info;
+    uint128 bounce;
+    uint256 recievedPubKey;
+    uint bounceCounter;
+
+    // debug function
+    function getInfo() public view returns (bytes32, uint128, uint, bytes32) {
+        tvm.accept();
+        return (param_previousTargetRole_info, bounce, bounceCounter, myRole);
+    }
+    // debug function
+    function getInfoRole(bytes32 role) public view returns (bytes32, bytes32, bool, bool, bool, bool, bytes32) {
+        tvm.accept();
+        return (role, ADMIN, roles[role], roles[ADMIN], roles[SUPERADMIN], roles['ADMIN'], SUPERADMIN);
+    }
+
     /*
      * Проверяет, что вызываемый текущим контрактом контракт имеет такой же init state
      */
     modifier isSameWallet(uint256 touchingPublicKey) {
-        tvm.accept();
+        // tvm.accept();
         TvmCell sendersStateInit = tvm.insertPubkey(myInitState, touchingPublicKey);
-        require (msg.sender.value == tvm.hash(sendersStateInit)); // в msg.sender.value лежит вторая часть адреса отправителя
+        require(msg.sender.value == tvm.hash(sendersStateInit), 111); // в msg.sender.value лежит вторая часть адреса отправителя
         _;
     }
 
     /**
-     * Modifier that allows public function to accept external calls only from owner
+     * @dev Modifier that allows public function to accept external calls only from owner
      */
-    modifier acceptOnlyOwner {
+    modifier onlyOwner {
         require(tvm.pubkey() == msg.pubkey(), 108);
-        tvm.accept();
-        _;
-    }
-
-    /**
-     * Only admins or superadmin can grant roles
-     */
-    modifier isAdminOrSuperadmin() {
-        require(hasRole(ADMIN) || hasRole(SUPERADMIN), 101, "Sender must be an admin or superadmin");
-        tvm.accept();
-        _;
-    }
-
-    /**
-     * Checks that granting is correct
-     */
-    modifier isCorrectGranting(bytes32 initatorRole, bytes32 newRole) {
-        if (initatorRole == ADMIN) {
-            require(newRole == USER || newRole == MODERATOR, 103, "Admin can not grant this role");
-            require(hasRole(USER) || hasRole(MODERATOR), 102, "Insuitable target role");
-        }
-        tvm.accept();
         _;
     }
 
@@ -71,8 +63,7 @@ contract AccessCard {
      * @dev Checks that role exists
      */
     modifier isRoleExists(bytes32 role) {
-        require(roles[role],  104, 'Incorrect role');
-        tvm.accept();
+        require(roles[role],  104); // 'Incorrect role'
         _;
     }
 
@@ -101,15 +92,16 @@ contract AccessCard {
     /**
      * @dev Grant the first superadmin
      */
-    function grantSuperAdmin() external virtual {
+    function grantSuperAdmin() external {
         require (msg.sender == accessControllerAddress, 107);
+        tvm.accept(); // TODO подумать
         myRole = 'SUPERADMIN';
     }
 
     /**
      * @dev Returns `true` if `target` has been granted `role`.
      */
-    function getRole() public view virtual returns (bytes32 my_role) {
+    function getRole() public view returns (bytes32 my_role) {
         tvm.accept();
         return myRole;
     }
@@ -117,7 +109,7 @@ contract AccessCard {
     /**
      * @dev Returns `true` if `target` has been granted `role`.
      */
-    function hasRole(bytes32 role) public view virtual returns (bool) {
+    function hasRole(bytes32 role) public view returns (bool) {
         tvm.accept();
         return myRole == role;
     }
@@ -125,22 +117,36 @@ contract AccessCard {
     /**
      * @dev Grants `role` to `target`
      */
-    function grantRole(bytes32 role, address targetAddress) acceptOnlyOwner() isAdminOrSuperadmin() isRoleExists(role) external {
+    function grantRole(bytes32 role, address targetAddress) onlyOwner isRoleExists(role) public {
+        require(hasRole(ADMIN) || hasRole(SUPERADMIN), 101, "Sender must be an admin or superadmin");
         require(targetAddress != address(this),  105, "grantRole: Can not grant role for himself"); // TODO может не нужно, если есть external?
+        // require(myRole == SUPERADMIN || role != SUPERADMIN, 110, 'Only superadmin can grant superadmin role');
         tvm.accept();
-        IAccessCard(targetAddress).changeRole(myRole, role, myPublicKey);
+        bytes32 calledByHavingRole = myRole; // my role at the time of the call
         if (role == SUPERADMIN) {
+            calledByHavingRole = 'ADMIN';
             myRole = USER;
         }
+        IAccessCard(targetAddress).changeRole{bounce:true}(calledByHavingRole, role, myPublicKey); 
     }
 
     /**
-     * Changes role for current AccessCard by another AccessCard
+     * @dev Changes role for current AccessCard by another AccessCard
      */
-    function changeRole(bytes32 initiatiorRole, bytes32 role, uint256 touchingPublicKey) isSameWallet(touchingPublicKey) isRoleExists(role) isCorrectGranting(initiatiorRole, role) public virtual {
+    function changeRole(bytes32 initiatorRole, bytes32 role, uint256 touchingPublicKey) /* isSameWallet(touchingPublicKey) */ isRoleExists(role) external {
+        tvm.accept();
+        TvmCell sendersStateInit = tvm.insertPubkey(myInitState, touchingPublicKey);
+        revert(115);
+    //require(msg.sender.value == tvm.hash(sendersStateInit), 111); // в msg.sender.value лежит вторая часть адреса отправителя
+        /* bounce = 36;//TODO del
+        tvm.commit();//TODO de */
+        if (initiatorRole == ADMIN) {
+            require(role == USER || role == MODERATOR, 103); // "Admin can not grant this role"
+            require(hasRole(USER) || hasRole(MODERATOR), 102); // "Insuitable target role"
+        }
         _changeRole(role);
         if (role == SUPERADMIN) {
-            IAccessController(accessControllerAddress).changeAdmin(address(this), msg.sender, myRole); //TODO видимо так
+            IAccessController(accessControllerAddress).changeAdmin{bounce:true}(address(this), msg.sender, myRole); //TODO видимо так
         }
     }
 
@@ -148,7 +154,7 @@ contract AccessCard {
      * @dev Deactivate yourself
      * - superadmin can not to renounce role 
      */
-    function deactivateHimself() acceptOnlyOwner() public {
+    function deactivateHimself() onlyOwner public {
         require(myRole != USER, 109, 'Already deactivated');
         require(myRole != SUPERADMIN,  106, "Superadmin can not to deactivate himself");
         tvm.accept();
@@ -158,8 +164,8 @@ contract AccessCard {
     /**
      * @dev Change role for yourself
      */
-    function _changeRole(bytes32 role) isRoleExists(role)  private {
-        tvm.accept();
+    function _changeRole(bytes32 role) private { // isRoleExists здесь лишнее при условии, что роль проверяется в вызывающем методе
+        tvm.accept(); // TODO вероятно лишнее - убрать
         myRole = role;
     }
 
@@ -167,14 +173,17 @@ contract AccessCard {
 	// external/internal message
 	// This function takes the body of the message as an argument.
 	onBounce(TvmSlice slice) external {
+        bounce = 66;
 		// Increase the counter.
-		// bounceCounter++;
-
+		bounceCounter++;
+        
 		// Start decoding the message. First 32 bits store the function id.
 		uint32 functionId = slice.decode(uint32);
 
 		// Api function tvm.functionId() allows to calculate function id by function name.
-		if (functionId == tvm.functionId(IAccessCard.changeRole)) {
+		if (functionId == tvm.functionId(IAccessCard.changeRole)) {}
+            // TODO раскомментить код ниже
+            /* bounce = 6;
 			//Function decodeFunctionParams() allows to decode function parameters from the slice.
 			// After decoding we store the arguments of the function in the state variables.
             bytes32 param_initiatiorRole;
@@ -185,11 +194,13 @@ contract AccessCard {
                 myRole = "SUPERADMIN";
             }
 		} else if (functionId == tvm.functionId(IAccessController.changeAdmin)) {
+            bounce = 7;
             address param_newSuperAdminAddress;
             address param_oldSuperAdminAddress;
             bytes32 param_previousTargetRole;
 			(param_newSuperAdminAddress, param_oldSuperAdminAddress, param_previousTargetRole) = slice.decodeFunctionParams(IAccessController.changeAdmin);
+            param_previousTargetRole_info = param_previousTargetRole;
             myRole = param_previousTargetRole;
-		}
+		} */
 	}
 }

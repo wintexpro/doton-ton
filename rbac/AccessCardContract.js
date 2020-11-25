@@ -18,6 +18,32 @@ const abi = {
 			]
 		},
 		{
+			"name": "getInfo",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"},
+				{"name":"value1","type":"uint128"},
+				{"name":"value2","type":"uint256"},
+				{"name":"value3","type":"uint256"}
+			]
+		},
+		{
+			"name": "getInfoRole",
+			"inputs": [
+				{"name":"role","type":"uint256"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"},
+				{"name":"value1","type":"uint256"},
+				{"name":"value2","type":"bool"},
+				{"name":"value3","type":"bool"},
+				{"name":"value4","type":"bool"},
+				{"name":"value5","type":"bool"},
+				{"name":"value6","type":"uint256"}
+			]
+		},
+		{
 			"name": "grantSuperAdmin",
 			"inputs": [
 			],
@@ -53,7 +79,7 @@ const abi = {
 		{
 			"name": "changeRole",
 			"inputs": [
-				{"name":"initiatiorRole","type":"uint256"},
+				{"name":"initiatorRole","type":"uint256"},
 				{"name":"role","type":"uint256"},
 				{"name":"touchingPublicKey","type":"uint256"}
 			],
@@ -77,7 +103,7 @@ const abi = {
 
 const pkg = {
     abi,
-    imageBase64: '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',
+    imageBase64: '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',
 };
 
 class AccessCardContract {
@@ -145,6 +171,59 @@ class AccessCardContract {
             keyPair: this.keys,
         });
         return result.output;
+    }
+
+    /**
+     * @typedef AccessCardContract_getInfo
+     * @type {object}
+     * @property {string} value0  (uint256)
+     * @property {uint128} value1 
+     * @property {string} value2  (uint256)
+     * @property {string} value3  (uint256)
+     */
+
+    /**
+     * @return {Promise.<AccessCardContract_getInfo>}
+     */
+    getInfo() {
+        return this.run('getInfo', {});
+    }
+
+    /**
+     * @return {Promise.<AccessCardContract_getInfo>}
+     */
+    getInfoLocal() {
+        return this.runLocal('getInfo', {});
+    }
+
+    /**
+     * @typedef AccessCardContract_getInfoRole
+     * @type {object}
+     * @property {string} value0  (uint256)
+     * @property {string} value1  (uint256)
+     * @property {bool} value2 
+     * @property {bool} value3 
+     * @property {bool} value4 
+     * @property {bool} value5 
+     * @property {string} value6  (uint256)
+     */
+
+    /**
+     * @param {object} params
+     * @param {string} params.role (uint256)
+     * @return {Promise.<AccessCardContract_getInfoRole>}
+     */
+    getInfoRole(params) {
+        return this.run('getInfoRole', params);
+    }
+
+    /**
+     * @param {object} params
+     * @param {string} params.role (uint256)
+     * @return {Promise.<AccessCardContract_getInfoRole>}
+     */
+    getInfoRoleLocal(params) {
+        return this.runLocal('getInfoRole', params);
     }
 
     /**
@@ -223,7 +302,7 @@ class AccessCardContract {
 
     /**
      * @param {object} params
-     * @param {string} params.initiatiorRole (uint256)
+     * @param {string} params.initiatorRole (uint256)
      * @param {string} params.role (uint256)
      * @param {string} params.touchingPublicKey (uint256)
      */
@@ -233,7 +312,7 @@ class AccessCardContract {
 
     /**
      * @param {object} params
-     * @param {string} params.initiatiorRole (uint256)
+     * @param {string} params.initiatorRole (uint256)
      * @param {string} params.role (uint256)
      * @param {string} params.touchingPublicKey (uint256)
      */

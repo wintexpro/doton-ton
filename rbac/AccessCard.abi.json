@@ -14,6 +14,32 @@
 			]
 		},
 		{
+			"name": "getInfo",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"},
+				{"name":"value1","type":"uint128"},
+				{"name":"value2","type":"uint256"},
+				{"name":"value3","type":"uint256"}
+			]
+		},
+		{
+			"name": "getInfoRole",
+			"inputs": [
+				{"name":"role","type":"uint256"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"},
+				{"name":"value1","type":"uint256"},
+				{"name":"value2","type":"bool"},
+				{"name":"value3","type":"bool"},
+				{"name":"value4","type":"bool"},
+				{"name":"value5","type":"bool"},
+				{"name":"value6","type":"uint256"}
+			]
+		},
+		{
 			"name": "grantSuperAdmin",
 			"inputs": [
 			],
@@ -49,7 +75,7 @@
 		{
 			"name": "changeRole",
 			"inputs": [
-				{"name":"initiatiorRole","type":"uint256"},
+				{"name":"initiatorRole","type":"uint256"},
 				{"name":"role","type":"uint256"},
 				{"name":"touchingPublicKey","type":"uint256"}
 			],
