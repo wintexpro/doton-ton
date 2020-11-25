@@ -74,10 +74,10 @@ describe('Asserts', function () {
     // import giver
     await managerForDev.addContractFromAddress(
       '0:440c99337a4009fec7ad4895a08587f05ab98b9d5c341dfb2211d1c862f1ae78',
-      path.join(__dirname, '../../../../contracts/CustomGiverForDevNet/WintexGiver.abi.json'),
+      path.join(__dirname, '../../CustomGiverForDevNet/WintexGiver.abi.json'),
       'WintexGiver'
     ) // add contract to managerForDev
-    const wintexGiverKeysObject = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../../contracts/CustomGiverForDevNet/WintexGiver.keys.json')))
+    const wintexGiverKeysObject = JSON.parse(fs.readFileSync(path.join(__dirname, '../../CustomGiverForDevNet/WintexGiver.keys.json')))
 
     // Deployment the AccessController:
     const keysForAccessController = await managerForDev.createKeysAndReturn()
