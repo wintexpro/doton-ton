@@ -12,16 +12,19 @@ contract AccessController {
     
     address superAdminAddress; // super-admin public key. Только один AccessCard может иметь роль super-admin.
 
-    modifier acceptOnlySuperAdmin(address _address) {
-        require(superAdminAddress == _address, 104);
-        tvm.accept();
-        _;
-    }
-
     // Modifier that allows public function to accept external calls only from RelayNodeF.
     modifier acceptOnlyOwner {
         require(tvm.pubkey() == msg.pubkey(), 102, 'Only for owners');
         tvm.accept();
+        _;
+    }
+
+    /*
+     * Проверяет, что вызываемый текущим контрактом контракт имеет такой же init state, как и accessCardInitState
+     */
+    modifier isSameWallet(uint256 touchingPublicKey, address senderAddress) { //TODO ПОДУМАТЬ СТО РАЗ, ПРАВИЛЬНО ЛИ Я ДЕЛАЮ ПРОВЕРКУ?
+        TvmCell sendersStateInit = tvm.insertPubkey(accessCardInitState, touchingPublicKey);
+        require(senderAddress.value == tvm.hash(sendersStateInit), 111); // в msg.sender.value лежит вторая часть адреса отправителя
         _;
     }
 
@@ -58,11 +61,10 @@ contract AccessController {
 
     /**
      * Change the superadmin. Called by contract AccessCard
-     * param value2 (third parameter) - previous role of target. Needed for onBounce in AccessCard (to back old role if current method was failed)
      */
-    function changeAdmin(address newSuperAdminAddress, address oldSuperAdminAddress, bytes32 /* previousTargetRole */) acceptOnlySuperAdmin(oldSuperAdminAddress) external {
-        require(tvm.pubkey() != msg.pubkey(), 103); // 'Only by another contracts' // а можно ли как-то протестить onBounce этой функции? По аналогии как я тестил grantRole в AccessCard. Как попать в кейс, когда сюда пропустит несуперадмина (только тогда можно будет поймать onBounce)?
-        tvm.accept();
+    function changeSuperAdmin(address newSuperAdminAddress, uint256 targetPubKey) isSameWallet(targetPubKey, newSuperAdminAddress) external {
+        // require(oldSuperAdminAddress == _address, 104); не должен попасть в этот кейс, поскольку все входные данные собираются контрактом заведомо корректно
+        // require(tvm.pubkey() != msg.pubkey(), 103); // 'Only by another contracts'
         superAdminAddress = newSuperAdminAddress;
     }
 

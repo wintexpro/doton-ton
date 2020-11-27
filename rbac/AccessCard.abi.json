@@ -18,25 +18,9 @@
 			"inputs": [
 			],
 			"outputs": [
-				{"name":"value0","type":"uint256"},
-				{"name":"value1","type":"uint128"},
-				{"name":"value2","type":"uint256"},
-				{"name":"value3","type":"uint256"}
-			]
-		},
-		{
-			"name": "getInfoRole",
-			"inputs": [
-				{"name":"role","type":"uint256"}
-			],
-			"outputs": [
-				{"name":"value0","type":"uint256"},
+				{"name":"value0","type":"uint128"},
 				{"name":"value1","type":"uint256"},
-				{"name":"value2","type":"bool"},
-				{"name":"value3","type":"bool"},
-				{"name":"value4","type":"bool"},
-				{"name":"value5","type":"bool"},
-				{"name":"value6","type":"uint256"}
+				{"name":"value2","type":"uint8"}
 			]
 		},
 		{
@@ -51,22 +35,13 @@
 			"inputs": [
 			],
 			"outputs": [
-				{"name":"my_role","type":"uint256"}
-			]
-		},
-		{
-			"name": "hasRole",
-			"inputs": [
-				{"name":"role","type":"uint256"}
-			],
-			"outputs": [
-				{"name":"value0","type":"bool"}
+				{"name":"my_role","type":"uint8"}
 			]
 		},
 		{
 			"name": "grantRole",
 			"inputs": [
-				{"name":"role","type":"uint256"},
+				{"name":"role","type":"uint8"},
 				{"name":"targetAddress","type":"address"}
 			],
 			"outputs": [
@@ -75,8 +50,8 @@
 		{
 			"name": "changeRole",
 			"inputs": [
-				{"name":"initiatorRole","type":"uint256"},
-				{"name":"role","type":"uint256"},
+				{"name":"initiatorRole","type":"uint8"},
+				{"name":"role","type":"uint8"},
 				{"name":"touchingPublicKey","type":"uint256"}
 			],
 			"outputs": [
@@ -91,7 +66,6 @@
 		}
 	],
 	"data": [
-		{"key":1,"name":"roles","type":"map(uint256,bool)"}
 	],
 	"events": [
 	]

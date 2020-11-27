@@ -22,25 +22,9 @@ const abi = {
 			"inputs": [
 			],
 			"outputs": [
-				{"name":"value0","type":"uint256"},
-				{"name":"value1","type":"uint128"},
-				{"name":"value2","type":"uint256"},
-				{"name":"value3","type":"uint256"}
-			]
-		},
-		{
-			"name": "getInfoRole",
-			"inputs": [
-				{"name":"role","type":"uint256"}
-			],
-			"outputs": [
-				{"name":"value0","type":"uint256"},
+				{"name":"value0","type":"uint128"},
 				{"name":"value1","type":"uint256"},
-				{"name":"value2","type":"bool"},
-				{"name":"value3","type":"bool"},
-				{"name":"value4","type":"bool"},
-				{"name":"value5","type":"bool"},
-				{"name":"value6","type":"uint256"}
+				{"name":"value2","type":"uint8"}
 			]
 		},
 		{
@@ -55,22 +39,13 @@ const abi = {
 			"inputs": [
 			],
 			"outputs": [
-				{"name":"my_role","type":"uint256"}
-			]
-		},
-		{
-			"name": "hasRole",
-			"inputs": [
-				{"name":"role","type":"uint256"}
-			],
-			"outputs": [
-				{"name":"value0","type":"bool"}
+				{"name":"my_role","type":"uint8"}
 			]
 		},
 		{
 			"name": "grantRole",
 			"inputs": [
-				{"name":"role","type":"uint256"},
+				{"name":"role","type":"uint8"},
 				{"name":"targetAddress","type":"address"}
 			],
 			"outputs": [
@@ -79,8 +54,8 @@ const abi = {
 		{
 			"name": "changeRole",
 			"inputs": [
-				{"name":"initiatorRole","type":"uint256"},
-				{"name":"role","type":"uint256"},
+				{"name":"initiatorRole","type":"uint8"},
+				{"name":"role","type":"uint8"},
 				{"name":"touchingPublicKey","type":"uint256"}
 			],
 			"outputs": [
@@ -95,7 +70,6 @@ const abi = {
 		}
 	],
 	"data": [
-		{"key":1,"name":"roles","type":"map(uint256,bool)"}
 	],
 	"events": [
 	]
@@ -103,7 +77,7 @@ const abi = {
 
 const pkg = {
     abi,
-    imageBase64: 'te6ccgECLwEACOAAAgE0AwEBAcACAEPQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAib/APSkICLAAZL0oOGK7VNYMPShDAQBCvSkIPShBQIDzkAJBgIB1AgHAKE7UTQ0//TP9MA1dP/0//T//QE1wt/+HX4cvhv+G74bNXT/9P/1wv/+HP4cfhw1dP/0//XC//4d/h2+HT6QPpA10z4bfhr+Gp/+GH4Zvhj+GKAAsT4QsjL//hDzws/+EbPCwDI+Ez4TvhP+FL4VV5Ay//L/8v/9ADLf8j4UPhR+FNeIMv/y//L/8j4VPhW+FdeIMv/y//L//hK+Ev4TV5QzxHPEc8Rzs7Mye1UgAgFYCwoADV+AAg+HMwgAD0+AD4UyG6MYAgEgEA0BAv8OAf5/jQhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE+Gkh7UTQINdJwgGOTdP/0z/TANXT/9P/0//0BNcLf/h1+HL4b/hu+GzV0//T/9cL//hz+HH4cNXT/9P/1wv/+Hf4dvh0+kD6QNdM+G34a/hqf/hh+Gb4Y/hiDwG2joDi0wABjhKBAgDXGCD5AVj4QiD4ZfkQ8qje0z8Bjh74QyG5IJ8wIPgjgQPoqIIIG3dAoLnekvhj4IA08jTY0x8hwQMighD////9vLGS8jzgAfAB+EdukvI83ikCASAUEQIBbhMSAIe37FM9fhBbpLwCd7RcPgA+FMxIcD/jiMj0NMB+kAwMcjPhyDOgGDPQM+Bz4HPk/7FM9Yhzwv/yXH7AN4wkvAI3n/4Z4ABVtkJwv74QW6S8Ane0fhJ+ErHBfLga/gAgkBTVVBFUkFETUlO+HPwCH/4Z4AIBICIVAgEgHBYCA3sgGBcA968oHv/hBbpLwCd7R+EL4RSBukjBw3rry4GyNBNBbHJlYWR5IGRlYWN0aXZhdGVkgyM7J+FP4Ub3y6G2NChTdXBlcmFkbWluIGNhbiBub3QgdG8gZGVhY3RpdmF0ZSBoaW1zZWxmgyM7J+FP4Tr3y6Gr4APhR+HPwCH/4Z4BB69zsNoZAf74QW6S8Ane0//XDf+V1NHQ0//f1w3/ldTR0NP/39EhIPhSgQEA9A6T1woAkXDi8uBo+AD4TSIh0Mgh0wAzwACTcc9AmnHPQSHTHzPPCx/iIdMAM8AAk3HPQJpxz0Eh0wEzzwsB4iHTADPAAJNxz0CYcc9BIdQzzxTiIdMAM8MBGgHmlIA38vDecc9ByCPPC/8i1DTQ9AQBInAigED0QzEgyPQAIMklzDUl0wA3wACVJHHPQDWbJHHPQTUl1DclzDXiJMkIXwjywHMk+E+6jh4j+FG6IJUwI/hQut/y4Gf4UfAEIJUw+FDwBN/y4GbeI/AHI/hOuhsAlI4/+Ep/yM+FgMoAc89Azo0EDmJaAAAAAAAAAAAAAAAAAAHPFs+Bz4PIz5AZ+dxe+CjPFvhJzxb4U88L/83JcfsA3jBfBPAIf/hnAgFIHx0Bx7Sdc/H8ILdJeATvaf/o/AAQfCeRfClAgIB6B0nrhQBIuHF8J/wpQICAegdJ64UASLhxfCd8KUCAgHoHSeuFAEi4cUWqCiJqSnRkZ2T8gHwpQICAegdJ64UASLhxfCc2C5Pgf8AeAJKOPSnQ0wH6QDAxyM+HIM6AYM9Az4HPg8jPkpTrn44ozwv/J88L/ybPCgAlzwoAJM8KACPPCgAizwv/zclx+wDeXweS8Ajef/hnAeW1TYDI/CC3SXgE72n//SDK6mjofSBv6PwhfCKQN0kYOG9deXA2EJB8KUCAgHoHSeuFAEi4cXlwNEaEqmytzIyuRA2urm6EDEykDC3EDCyNrS3EDe5EDm6uDK5MLI2tLdBkZ2T8J/gCEEqYfCd4Am/5dDLAIAH+jQpZ3JhbnRSb2xlOiBDYW4gbm90IGdyYW50IHJvbGUgZm9yIGhpbXNlbGaDIzski+CjHBbPy6Gn4APhTI/hOupyCGEFETUlOMfhR+HPeIn/Iz4WAygBzz0DOjQQOYloAAAAAAAAAAAAAAAAAAc8Wz4HPg8jPkPFzsNoizwv/JSEAKs8L//hMzwv/zclx+wAwMFvwCH/4ZwIBIC4jAgEgKyQBD7bLuS8+EFugJQL+joDe+Ebyc3H4ZvpA1w3/ldTR0NP/3/pBldTR0PpA39TR+AAj+Goh+Gsi+Gwg+G2CQFNVUEVSQURNSU74boIYQURNSU74b4I4TU9ERVJBVE9S+HCCEFVTRVL4cfhS+E4Bf8jKAFmBAQD0Q/hy+FL4TwF/yMoAWYEBAPRD+HL4UicmAFb4UAF/yMoAWYEBAPRD+HL4UvhRAX/IygBZgQEA9EP4cvhR+HNfBPAIf/hnAa7tRNAg10nCAY5N0//TP9MA1dP/0//T//QE1wt/+HX4cvhv+G74bNXT/9P/1wv/+HP4cfhw1dP/0//XC//4d/h2+HT6QPpA10z4bfhr+Gp/+GH4Zvhj+GIoAQaOgOIpAf70BY0IYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABPhqjQhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE+Gtw+GzIyfhtcPhucPhvcPhwcPhxcSGAQPQOkvQFkW3i+HJw+HNw+HRw+HVw+HZw+HdwKgAqAYBA9A7yvdcL//hicPhjcPhmf/hhAgEgLSwAjbQxNRB8ILdJeATvaf/o/AB8KZDdGJDgf8cRkehpgP0gGBjkZ8OQZ0AwZ6BnwOfA58koxNRBEOeFAGS4/YBvGEl4BG8//DPAAK21IMPMfCC3SXgE72j8AHwqfCr8K/wpkmB/xxiTaGmA/SAYGORnw5BnQDBnoGfA58HkZ8kkgw8xEueF/5Jnhb+R54X/kWeF/+bkuP2Aby+CSXgEbz/8M8AArtxwItDTA/pAMPhpqTgAjiMh1h8xcfAB8AmAQvh1+Fek+Hcg0x8yIIIQPFzsNrqQ3lvwCOAhxwDcIdMfId0hwQMighD////9vLGS8jzgAfAB+EdukvI83g==',
+    imageBase64: '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',
 };
 
 class AccessCardContract {
@@ -126,17 +100,15 @@ class AccessCardContract {
      * @param {string} constructorParams._myPublicKey (uint256)
      * @param {string} constructorParams._superAdminAddress (address)
      * @param {cell} constructorParams._myInitState
-     * @param {object} initParams
-     * @param {map(uint256,bool)} initParams.roles
      */
-    async deploy(constructorParams, initParams) {
+    async deploy(constructorParams) {
         if (!this.keys) {
             this.keys = await this.client.crypto.ed25519Keypair();
         }
         this.address = (await this.client.contracts.deploy({
             package: pkg,
             constructorParams,
-            initParams,
+            initParams: {},
             keyPair: this.keys,
         })).address;
     }
@@ -176,10 +148,9 @@ class AccessCardContract {
     /**
      * @typedef AccessCardContract_getInfo
      * @type {object}
-     * @property {string} value0  (uint256)
-     * @property {uint128} value1 
-     * @property {string} value2  (uint256)
-     * @property {string} value3  (uint256)
+     * @property {uint128} value0 
+     * @property {string} value1  (uint256)
+     * @property {number} value2  (uint8)
      */
 
     /**
@@ -197,36 +168,6 @@ class AccessCardContract {
     }
 
     /**
-     * @typedef AccessCardContract_getInfoRole
-     * @type {object}
-     * @property {string} value0  (uint256)
-     * @property {string} value1  (uint256)
-     * @property {bool} value2 
-     * @property {bool} value3 
-     * @property {bool} value4 
-     * @property {bool} value5 
-     * @property {string} value6  (uint256)
-     */
-
-    /**
-     * @param {object} params
-     * @param {string} params.role (uint256)
-     * @return {Promise.<AccessCardContract_getInfoRole>}
-     */
-    getInfoRole(params) {
-        return this.run('getInfoRole', params);
-    }
-
-    /**
-     * @param {object} params
-     * @param {string} params.role (uint256)
-     * @return {Promise.<AccessCardContract_getInfoRole>}
-     */
-    getInfoRoleLocal(params) {
-        return this.runLocal('getInfoRole', params);
-    }
-
-    /**
      */
     grantSuperAdmin() {
         return this.run('grantSuperAdmin', {});
@@ -241,7 +182,7 @@ class AccessCardContract {
     /**
      * @typedef AccessCardContract_getRole
      * @type {object}
-     * @property {string} my_role  (uint256)
+     * @property {number} my_role  (uint8)
      */
 
     /**
@@ -259,32 +200,8 @@ class AccessCardContract {
     }
 
     /**
-     * @typedef AccessCardContract_hasRole
-     * @type {object}
-     * @property {bool} value0 
-     */
-
-    /**
      * @param {object} params
-     * @param {string} params.role (uint256)
-     * @return {Promise.<AccessCardContract_hasRole>}
-     */
-    hasRole(params) {
-        return this.run('hasRole', params);
-    }
-
-    /**
-     * @param {object} params
-     * @param {string} params.role (uint256)
-     * @return {Promise.<AccessCardContract_hasRole>}
-     */
-    hasRoleLocal(params) {
-        return this.runLocal('hasRole', params);
-    }
-
-    /**
-     * @param {object} params
-     * @param {string} params.role (uint256)
+     * @param {number} params.role (uint8)
      * @param {string} params.targetAddress (address)
      */
     grantRole(params) {
@@ -293,7 +210,7 @@ class AccessCardContract {
 
     /**
      * @param {object} params
-     * @param {string} params.role (uint256)
+     * @param {number} params.role (uint8)
      * @param {string} params.targetAddress (address)
      */
     grantRoleLocal(params) {
@@ -302,8 +219,8 @@ class AccessCardContract {
 
     /**
      * @param {object} params
-     * @param {string} params.initiatorRole (uint256)
-     * @param {string} params.role (uint256)
+     * @param {number} params.initiatorRole (uint8)
+     * @param {number} params.role (uint8)
      * @param {string} params.touchingPublicKey (uint256)
      */
     changeRole(params) {
@@ -312,8 +229,8 @@ class AccessCardContract {
 
     /**
      * @param {object} params
-     * @param {string} params.initiatorRole (uint256)
-     * @param {string} params.role (uint256)
+     * @param {number} params.initiatorRole (uint8)
+     * @param {number} params.role (uint8)
      * @param {string} params.touchingPublicKey (uint256)
      */
     changeRoleLocal(params) {

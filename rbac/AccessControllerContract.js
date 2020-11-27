@@ -48,11 +48,10 @@ const abi = {
 			]
 		},
 		{
-			"name": "changeAdmin",
+			"name": "changeSuperAdmin",
 			"inputs": [
 				{"name":"newSuperAdminAddress","type":"address"},
-				{"name":"oldSuperAdminAddress","type":"address"},
-				{"name":"value2","type":"uint256"}
+				{"name":"targetPubKey","type":"uint256"}
 			],
 			"outputs": [
 			]
@@ -75,7 +74,7 @@ const abi = {
 
 const pkg = {
     abi,
-    imageBase64: 'te6ccgECIQEABUAAAgE0AwEBAcACAEPQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAib/APSkICLAAZL0oOGK7VNYMPShCAQBCvSkIPShBQIJnwAAAAMHBgA3O1E0NP/0z/TANTTf/hs+Gv4an/4Yfhm+GP4YoAA9PhCyMv/+EPPCz/4Rs8LAPhK+Ev4TF4gzMt/zsntVIAIBIAsJAeD/fyHtRNAg10nCAY4Y0//TP9MA1NN/+Gz4a/hqf/hh+Gb4Y/hijkX0BcjJ+Gpw+GuNCGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT4bHABgED0DvK91wv/+GJw+GNw+GZ/+GHi0wABCgCqjhKBAgDXGCD5AVj4QiD4ZfkQ8qje0z8Bjh74QyG5IJ8wIPgjgQPoqIIIG3dAoLnekvhj4IA08jTY0x8hwQMighD////9vLGS8jzgAfAB+EdukvI83gIBIA8MAQm9Eix8RA0B/PhBbo5q7UTQINdJwgGOGNP/0z/TANTTf/hs+Gv4an/4Yfhm+GP4Yo5F9AXIyfhqcPhrjQhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE+GxwAYBA9A7yvdcL//hicPhjcPhmf/hh4t74RvJzcfhm1NN/0fgAIQ4AHvhqIPhr+Cj4bFvwAn/4ZwIBIBoQAgEgFREBCbjdSS2wEgH4+EFukvAD3tP/0Y0IYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABPgA+EoiIdDIIdMAM8AAk3HPQJpxz0Eh0x8zzwsf4iHTADPAAJNxz0Cacc9BIdMBM88LAeIh0wAzwACTcc9AmHHPQSHUM88U4iHTADPDARMB/JSAN/Lw3nHPQcgjzwv/ItQ00PQEASJwIoBA9EMxIMj0ACDJJcw1JdMAN8AAlSRxz0A1myRxz0E1JdQ3Jcw14iTJCF8IICD5AMjPigBAy//J0PhLIcjPhYjOAfoCgGnPQM+Dz4MizxTPg8jPkGy7kvL4KM8WJs8L//hMzxb4ShQAcs8Uzclx+wAxA18DIcD/jiIj0NMB+kAwMcjPhyDOgGDPQM+Bz4HPktupJbYhzxbJcfsA3jDwAn/4ZwIBWBkWAQm0EZy1wBcB/PhBbpLwA976QNGL9Pbmx5IGZvciBvd25lcnOMjOyfhC+EUgbpIwcN668uhm+ACNCFTdXBlcmFkbWluIGFscmVhZHkgY3JlYXRlZCBlYXJsZXKDIzsn4TPgoxwXy6GX4ACD4bCDIz4WIzo0EDmJaAAAAAAAAAAAAAAAAAAHPFhgAKM+Bz4HPkcQnC/rJcfsAMPACf/hnAIG0oaYd/CC3SXgB72j8AHwmEOB/xxER6GmA/SAYGORnw5BnQDBnoGfA58DnyVKGmHcQ54tkuP2AbxhJeAFvP/wzwAIBIBwbAHe49+R5/wgt0l4Ae9pv+jF+ntzY8kDM3uRA3u7cyuTnGRnZPwhfCKQN0kYOG9deXQzfAAQfDWYeAE//DPACASAeHQCDt2QYcn4QW6S8APe0fgA+EshwP+OIyPQ0wH6QDAxyM+HIM6AYM9Az4HPgc+SNkGHJiHPC3/JcfsA3jCS8ALef/hngAgEgIB8AjbU/O4v8ILdJeAHvfSB9IMrqaOh9IG/rhv/K6mjoaf/v6JD8JhDjgvlwNHwAfCF8IpA3SRg4b175cDP8ABH8Ni+CeAE//DPAAFzacCLQ1wsDqTgA3CHHANwh0x8h3SHBAyKCEP////28sZLyPOAB8AH4R26S8jze',
+    imageBase64: 'te6ccgECIwEABcMAAgE0AwEBAcACAEPQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAib/APSkICLAAZL0oOGK7VNYMPShCAQBCvSkIPShBQIJnwAAAAMHBgA3O1E0NP/0z/TANTTf/hs+Gv4an/4Yfhm+GP4YoAA9PhCyMv/+EPPCz/4Rs8LAPhK+Ev4TF4gzMt/zsntVIAIBIAsJAeD/fyHtRNAg10nCAY4Y0//TP9MA1NN/+Gz4a/hqf/hh+Gb4Y/hijkX0BcjJ+Gpw+GuNCGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT4bHABgED0DvK91wv/+GJw+GNw+GZ/+GHi0wABCgCqjhKBAgDXGCD5AVj4QiD4ZfkQ8qje0z8Bjh74QyG5IJ8wIPgjgQPoqIIIG3dAoLnekvhj4IA08jTY0x8hwQMighD////9vLGS8jzgAfAB+EdukvI83gIBIBMMAgFYEA0BCbhA9ZQwDgH++EFukvAD3vpA1w3/ldTR0NP/39EgIvhKIiHQyCHTADPAAJNxz0Cacc9BIdMfM88LH+Ih0wAzwACTcc9AmnHPQSHTATPPCwHiIdMAM8AAk3HPQJhxz0Eh1DPPFOIh0wAzwwGUgDfy8N5xz0HII88L/yLUNND0BAEicCKAQPRDMQ8AgCDI9AAgySXMNSXTADfAAJUkcc9ANZskcc9BNSXUNyXMNeIkyQhfCCGAC9ch1wv/IfkAuvLgbyT4bF8F8AJ/+GcBCbhIsfEQEQH8+EFujmrtRNAg10nCAY4Y0//TP9MA1NN/+Gz4a/hqf/hh+Gb4Y/hijkX0BcjJ+Gpw+GuNCGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT4bHABgED0DvK91wv/+GJw+GNw+GZ/+GHi3vhG8nNx+GbU03/R+AAhEgAe+Gog+Gv4KPhsW/ACf/hnAgEgHhQCASAZFQEJuN1JLbAWAfj4QW6S8APe0//RjQhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE+AD4SiIh0Mgh0wAzwACTcc9AmnHPQSHTHzPPCx/iIdMAM8AAk3HPQJpxz0Eh0wEzzwsB4iHTADPAAJNxz0CYcc9BIdQzzxTiIdMAM8MBFwH8lIA38vDecc9ByCPPC/8i1DTQ9AQBInAigED0QzEgyPQAIMklzDUl0wA3wACVJHHPQDWbJHHPQTUl1DclzDXiJMkIXwggIPkAyM+KAEDL/8nQ+EshyM+FiM4B+gKAac9Az4PPgyLPFM+DyM+QbLuS8vgozxYmzwv/+EzPFvhKGAByzxTNyXH7ADEDXwMhwP+OIiPQ0wH6QDAxyM+HIM6AYM9Az4HPgc+S26kltiHPFslx+wDeMPACf/hnAgFYHRoBCbQRnLXAGwH8+EFukvAD3vpA0Yv09ubHkgZm9yIG93bmVyc4yM7J+EL4RSBukjBw3rry6Gb4AI0IVN1cGVyYWRtaW4gYWxyZWFkeSBjcmVhdGVkIGVhcmxlcoMjOyfhM+CjHBfLoZfgAIPhsIMjPhYjOjQQOYloAAAAAAAAAAAAAAAAAAc8WHAAoz4HPgc+RxCcL+slx+wAw8AJ/+GcAgbShph38ILdJeAHvaPwAfCYQ4H/HERHoaYD9IBgY5GfDkGdAMGegZ8DnwOfJUoaYdxDni2S4/YBvGEl4AW8//DPAAgEgIB8Ad7j35Hn/CC3SXgB72m/6MX6e3NjyQMze5EDe7tzK5OcZGdk/CF8IpA3SRg4b115dDN8ABB8NZh4AT/8M8AIBICIhAIO3ZBhyfhBbpLwA97R+AD4SyHA/44jI9DTAfpAMDHIz4cgzoBgz0DPgc+Bz5I2QYcmIc8Lf8lx+wDeMJLwAt5/+GeAAXNtwItDXCwOpOADcIccA3CHTHyHdIcEDIoIQ/////byxkvI84AHwAfhHbpLyPN4=',
 };
 
 class AccessControllerContract {
@@ -216,21 +215,19 @@ class AccessControllerContract {
     /**
      * @param {object} params
      * @param {string} params.newSuperAdminAddress (address)
-     * @param {string} params.oldSuperAdminAddress (address)
-     * @param {string} params.value2 (uint256)
+     * @param {string} params.targetPubKey (uint256)
      */
-    changeAdmin(params) {
-        return this.run('changeAdmin', params);
+    changeSuperAdmin(params) {
+        return this.run('changeSuperAdmin', params);
     }
 
     /**
      * @param {object} params
      * @param {string} params.newSuperAdminAddress (address)
-     * @param {string} params.oldSuperAdminAddress (address)
-     * @param {string} params.value2 (uint256)
+     * @param {string} params.targetPubKey (uint256)
      */
-    changeAdminLocal(params) {
-        return this.runLocal('changeAdmin', params);
+    changeSuperAdminLocal(params) {
+        return this.runLocal('changeSuperAdmin', params);
     }
 
     /**
