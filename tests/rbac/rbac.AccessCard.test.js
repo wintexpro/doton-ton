@@ -8,8 +8,7 @@
 const assert = require('assert')
 const fs = require('fs')
 const path = require('path')
-/* const fromHexWith0x = require('../helper').fromHexWith0x
-const toHex = require('../helper').toHex */
+const runLocal = require('../helper').runLocal
 
 const accessCardAbiPath = path.join(__dirname, '../../rbac/AccessCard.abi.json')
 const accessCardTvcPath = path.join(__dirname, '../../rbac/AccessCard.tvc')
@@ -100,18 +99,18 @@ describe('Asserts', function () {
     }, keysForAccessController2)
 
     // check that role has not been changed
-    const getRoleRes = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
+    const getRoleRes = await runLocal(manager, 'AccessCard1', 'getRole', {})
     assert.deepStrictEqual(getRoleRes.my_role, USER)
   })
 
   it('Test: grantSuperAdmin - calling from AccessController should change role on `SUPERADMIN`', async function () {
-    const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1')
-    const getRoleBeforeGrantingRes = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
+    await deployAccessCardFromAccessController('AccessCard1')
+    const getRoleBeforeGrantingRes = await runLocal(manager, 'AccessCard1', 'getRole', {})
     assert.deepStrictEqual(getRoleBeforeGrantingRes.my_role, USER)
 
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].runContract('grantSuperAdminRole', { accessCardAddress: manager.contracts['AccessCard1'].address })
-    const getRoleAfterGrantingRes = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
+    const getRoleAfterGrantingRes = await runLocal(manager, 'AccessCard1', 'getRole', {})
     assert.deepStrictEqual(getRoleAfterGrantingRes.my_role, SUPERADMIN)
   })
 
@@ -122,9 +121,9 @@ describe('Asserts', function () {
     await manager.contracts['AccessController'].runContract('grantSuperAdminRole', { accessCardAddress: manager.contracts['AccessCard1'].address })
 
     // --- Deployment the second AccessCard ---
-    const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2')
+    await deployAccessCardFromAccessController('AccessCard2')
     // check role before change
-    const getRoleBeforeGrantingRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const getRoleBeforeGrantingRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(getRoleBeforeGrantingRes.my_role, USER)
 
     // grant ADMIN to second AccessCard
@@ -132,7 +131,7 @@ describe('Asserts', function () {
     await manager.contracts['AccessCard1'].runContract('grantRole', { role: ADMIN, targetAddress: manager.contracts['AccessCard2'].address }, keysForAccessCard1)
 
     // check that role changed
-    const getRoleAfterGrantingRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const getRoleAfterGrantingRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(getRoleAfterGrantingRes.my_role, ADMIN)
   })
 
@@ -143,7 +142,7 @@ describe('Asserts', function () {
     await manager.contracts['AccessController'].runContract('grantSuperAdminRole', { accessCardAddress: manager.contracts['AccessCard1'].address })
 
     // get role before change
-    const getRoleBeforeGrantingRes = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
+    const getRoleBeforeGrantingRes = await runLocal(manager, 'AccessCard1', 'getRole', {})
     assert.deepStrictEqual(getRoleBeforeGrantingRes.my_role, SUPERADMIN)
 
     // grant ADMIN to second AccessCard
@@ -156,55 +155,9 @@ describe('Asserts', function () {
     assert.deepStrictEqual(error.data.exit_code, 105)
 
     // check that role has not been changed
-    const getRoleAfterGrantingRes = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
+    const getRoleAfterGrantingRes = await runLocal(manager, 'AccessCard1', 'getRole', {})
     assert.deepStrictEqual(getRoleAfterGrantingRes.my_role, getRoleBeforeGrantingRes.my_role)
   })
-
-  /* it('Test: grantRole (+ getRole) - should throw exception if try to change superadmin by not superadmin', async function () {
-    // --- Deployment the first AccessCard ---
-    const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1')
-    // --- Deployment the second AccessCard ---
-    const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2')
-
-    await manager.giveToAddress(manager.contracts['AccessCard1'].address)
-    await manager.giveToAddress(manager.contracts['AccessCard2'].address)
-
-    // --- Grant first superadmin ---
-    await manager.contracts['AccessController'].runContract('grantSuperAdminRole', {
-      accessCardAddress: manager.contracts['AccessCard1'].address
-    })
-
-    // Grant admin to second AccessCard
-    await manager.contracts['AccessCard1'].runContract(
-      'grantRole',
-      { role: toHex(ADMIN), targetAddress: manager.contracts['AccessCard2'].address },
-      keysForAccessCard1
-    )
-
-    // check roles before trying to grant role
-    const getRoleAccessCard1Res = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
-    assert.deepStrictEqual(getRoleAccessCard1Res.my_role, SUPERADMIN)
-    const getRoleAccessCard2Res = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
-    assert.deepStrictEqual(getRoleAccessCard2Res.my_role, ADMIN)
-
-    // try to grant superadmin by not superadmin
-    let error
-    await manager.contracts['AccessCard2'].runContract(
-      'grantRole',
-      { role: toHex(SUPERADMIN), targetAddress: manager.contracts['AccessCard1'].address },
-      keysForAccessCard2
-    ).catch(e => { error = e })
-    assert.deepStrictEqual(error.data.exit_code, 110)
-
-    // check roles after
-    const getRoleAccessCard1AfterRes = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
-    assert.deepStrictEqual(getRoleAccessCard1AfterRes.my_role, getRoleAccessCard1Res.my_role)
-    const getRoleAccessCard2AfterRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
-    assert.deepStrictEqual(getRoleAccessCard2AfterRes.my_role, getRoleAccessCard2Res.my_role)
-    // check superAdminAddress after
-    const superAdminAddressAfterGrantingRes = await manager.contracts['AccessController'].runContract('getSuperAdminAddress', {})
-    console.log(superAdminAddressAfterGrantingRes.value0, manager.contracts['AccessCard1'].address)
-  }) */
 
   it('Test: grantRole (+ getRole) - should throw exception if admin try to grant role that he is not allowed to grant', async function () {
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1')
@@ -218,9 +171,9 @@ describe('Asserts', function () {
     // Grant admin to second AccessCard
     await manager.contracts['AccessCard1'].runContract('grantRole', { role: ADMIN, targetAddress: manager.contracts['AccessCard2'].address }, keysForAccessCard1)
     // check roles before trying to change role
-    const getRoleAccessCard1Res = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
+    const getRoleAccessCard1Res = await runLocal(manager, 'AccessCard1', 'getRole', {})
     assert.deepStrictEqual(getRoleAccessCard1Res.my_role, SUPERADMIN)
-    const getRoleAccessCard2Res = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const getRoleAccessCard2Res = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(getRoleAccessCard2Res.my_role, ADMIN)
 
     // try to grant admin by admin
@@ -233,9 +186,9 @@ describe('Asserts', function () {
     assert.deepStrictEqual(error.data.exit_code, 103)
 
     // check roles after
-    const getRoleAccessCard1AfterRes = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
+    const getRoleAccessCard1AfterRes = await runLocal(manager, 'AccessCard1', 'getRole', {})
     assert.deepStrictEqual(getRoleAccessCard1AfterRes.my_role, getRoleAccessCard1Res.my_role)
-    const getRoleAccessCard2AfterRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const getRoleAccessCard2AfterRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(getRoleAccessCard2AfterRes.my_role, getRoleAccessCard2Res.my_role)
   })
 
@@ -246,7 +199,7 @@ describe('Asserts', function () {
     await manager.contracts['AccessController'].runContract('grantSuperAdminRole', { accessCardAddress: manager.contracts['AccessCard1'].address })
 
     // get target AccessCard role before change
-    const getRoleBeforeGrantingRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const getRoleBeforeGrantingRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(getRoleBeforeGrantingRes.my_role, USER)
 
     // grant ADMIN to second AccessCard
@@ -259,16 +212,16 @@ describe('Asserts', function () {
     assert.ok((error.data.exit_code === 102) || (error.data.tip === 'Check sign keys'))
 
     // check that target AccessCard role has not been changed
-    const getRoleAfterGrantingRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const getRoleAfterGrantingRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(getRoleAfterGrantingRes.my_role, getRoleBeforeGrantingRes.my_role)
   })
 
   it('Test: grantRole (+ getRole) - should throw exception if contract has not role `ADMIN` or `SUPERADMIN`. Case 1: Contract role is `USER`', async function () {
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1')
-    const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2')
+    await deployAccessCardFromAccessController('AccessCard2')
 
     // get target AccessCard role before change
-    const getRoleBeforeGrantingRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const getRoleBeforeGrantingRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(getRoleBeforeGrantingRes.my_role, USER)
 
     // grant ADMIN to second AccessCard
@@ -281,7 +234,7 @@ describe('Asserts', function () {
     assert.deepStrictEqual(error.data.exit_code, 101)
 
     // check that target AccessCard role has not been changed
-    const getRoleAfterGrantingRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const getRoleAfterGrantingRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(getRoleAfterGrantingRes.my_role, getRoleBeforeGrantingRes.my_role)
   })
 
@@ -298,13 +251,13 @@ describe('Asserts', function () {
     // grant ADMIN to second AccessCard by first AccessCard
     await manager.contracts['AccessCard1'].runContract('grantRole', { role: ADMIN, targetAddress: manager.contracts['AccessCard2'].address }, keysForAccessCard1)
     // check that role was changed
-    const accessCard2RoleRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const accessCard2RoleRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(accessCard2RoleRes.my_role, ADMIN)
 
     // grant MODERATOR to third AccessCard by second AccessCard
     await manager.contracts['AccessCard2'].runContract('grantRole', { role: MODERATOR, targetAddress: manager.contracts['AccessCard3'].address }, keysForAccessCard2)
     // check that role was changed
-    const accessCard3RoleRes = await manager.contracts['AccessCard3'].runContract('getRole', {}, keysForAccessCard3)
+    const accessCard3RoleRes = await runLocal(manager, 'AccessCard3', 'getRole', {})
     assert.deepStrictEqual(accessCard3RoleRes.my_role, MODERATOR)
 
     let error
@@ -317,18 +270,18 @@ describe('Asserts', function () {
     assert.deepStrictEqual(error.data.exit_code, 101)
 
     // check that third AccessCard role has not been changed
-    const accessCard2RoleAfterRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const accessCard2RoleAfterRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(accessCard2RoleRes.my_role, accessCard2RoleAfterRes.my_role)
   })
 
   it('Test: grantRole (+ getRole) - should throw exception if try to grant incorrect role', async function () {
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1')
-    const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2')
+    await deployAccessCardFromAccessController('AccessCard2')
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].runContract('grantSuperAdminRole', { accessCardAddress: manager.contracts['AccessCard1'].address })
 
     // get target role before change
-    const getRoleBeforeGrantingRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const getRoleBeforeGrantingRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(getRoleBeforeGrantingRes.my_role, USER)
 
     // try to grant incorrect role to second AccessCard
@@ -341,11 +294,11 @@ describe('Asserts', function () {
     assert.deepStrictEqual(error.data.exit_code, 104)
 
     // check that target role has not been changed
-    const getRoleAfterGrantingRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const getRoleAfterGrantingRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(getRoleAfterGrantingRes.my_role, getRoleBeforeGrantingRes.my_role)
   })
 
-  it('Test (in net.ton.dev): grantRole + changeRole + onBounce - should not change target role if target role insuitable', async function () {
+  it.only('Test (in net.ton.dev): grantRole + changeRole + onBounce - should not change target role if target role insuitable', async function () {
     const devMgr = new Manager()
     await devMgr.createClient(['net.ton.dev'])
 
@@ -457,7 +410,7 @@ describe('Asserts', function () {
   it('Test: grantRole (+ getRole, + onBounce) - should not change target role if you can not grant this role because target role insuitable', async function () {
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1')
     const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2')
-    const keysForAccessCard3 = await deployAccessCardFromAccessController('AccessCard3')
+    await deployAccessCardFromAccessController('AccessCard3')
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].runContract('grantSuperAdminRole', { accessCardAddress: manager.contracts['AccessCard1'].address })
 
@@ -467,31 +420,31 @@ describe('Asserts', function () {
     // grant ADMIN to second AccessCard by first AccessCard
     await manager.contracts['AccessCard1'].runContract('grantRole', { role: ADMIN, targetAddress: manager.contracts['AccessCard2'].address }, keysForAccessCard1)
     // check that role was changed
-    const accessCard2RoleRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const accessCard2RoleRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(accessCard2RoleRes.my_role, ADMIN)
 
     // grant ADMIN to third AccessCard by first AccessCard
     await manager.contracts['AccessCard1'].runContract('grantRole', { role: ADMIN, targetAddress: manager.contracts['AccessCard3'].address }, keysForAccessCard1)
     // check that role was changed
-    const accessCard3RoleRes = await manager.contracts['AccessCard3'].runContract('getRole', {}, keysForAccessCard3)
+    const accessCard3RoleRes = await await runLocal(manager, 'AccessCard3', 'getRole', {})
     assert.deepStrictEqual(accessCard3RoleRes.my_role, ADMIN)
 
     // ========== cases: ==========
     // ========== case 1: try to grant USER by ADMIN to SUPERADMIN==========
     // check first AccessCard role
-    const accessCard1RoleRes = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
+    const accessCard1RoleRes = await runLocal(manager, 'AccessCard1', 'getRole', {})
     assert.deepStrictEqual(accessCard1RoleRes.my_role, SUPERADMIN)
     // Dont throw error because onBound() will catch this and rollback updates
     await manager.contracts['AccessCard2'].runContract('grantRole', { role: USER, targetAddress: manager.contracts['AccessCard1'].address }, keysForAccessCard2)
     // check that third AccessCard role has not been changed
-    const accessCard1RoleAfterRes = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
+    const accessCard1RoleAfterRes = await runLocal(manager, 'AccessCard1', 'getRole', {})
     assert.deepStrictEqual(accessCard1RoleRes.my_role, accessCard1RoleAfterRes.my_role)
 
     // ========== case 2: try to grant USER by ADMIN to another ADMIN ==========
     // Dont throw error because onBound() will catch this and rollback updates
     await manager.contracts['AccessCard2'].runContract('grantRole', { role: USER, targetAddress: manager.contracts['AccessCard3'].address }, keysForAccessCard2)
     // check that third AccessCard role has not been changed
-    const accessCard3RoleAfterRes = await manager.contracts['AccessCard3'].runContract('getRole', {}, keysForAccessCard3)
+    const accessCard3RoleAfterRes = await runLocal(manager, 'AccessCard3', 'getRole', {})
     assert.deepStrictEqual(accessCard3RoleRes.my_role, accessCard3RoleAfterRes.my_role)
   })
 
@@ -508,23 +461,23 @@ describe('Asserts', function () {
     // grant ADMIN to second AccessCard by first AccessCard
     await manager.contracts['AccessCard1'].runContract('grantRole', { role: ADMIN, targetAddress: manager.contracts['AccessCard2'].address }, keysForAccessCard1)
     // check that role was changed
-    const accessCard2RoleRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const accessCard2RoleRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(accessCard2RoleRes.my_role, ADMIN)
 
     // grant MODERATOR to third AccessCard by second AccessCard
     await manager.contracts['AccessCard2'].runContract('grantRole', { role: MODERATOR, targetAddress: manager.contracts['AccessCard3'].address }, keysForAccessCard2)
     // check that role was changed
-    const accessCard3RoleRes = await manager.contracts['AccessCard3'].runContract('getRole', {}, keysForAccessCard3)
+    const accessCard3RoleRes = await runLocal(manager, 'AccessCard3', 'getRole', {})
     assert.deepStrictEqual(accessCard3RoleRes.my_role, MODERATOR)
 
     // case 1: deactivate by ADMIN
     await manager.contracts['AccessCard2'].runContract('deactivateHimself', {}, keysForAccessCard2)
-    const accessCard2RoleAfterRes = await manager.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
+    const accessCard2RoleAfterRes = await runLocal(manager, 'AccessCard2', 'getRole', {})
     assert.deepStrictEqual(accessCard2RoleAfterRes.my_role, USER)
 
     // case 2: deactivate by MODERATOR
     await manager.contracts['AccessCard3'].runContract('deactivateHimself', {}, keysForAccessCard3)
-    const accessCard3RoleAfterRes = await manager.contracts['AccessCard3'].runContract('getRole', {}, keysForAccessCard3)
+    const accessCard3RoleAfterRes = await runLocal(manager, 'AccessCard3', 'getRole', {})
     assert.deepStrictEqual(accessCard3RoleAfterRes.my_role, USER)
   })
 
@@ -535,7 +488,7 @@ describe('Asserts', function () {
     await manager.contracts['AccessCard1'].runContract('deactivateHimself', {}, keysForAccessCard1).catch(e => { error = e })
     assert.deepStrictEqual(error.data.exit_code, 109)
     // check that role has not been changed
-    const accessCard1RoleAfterRes = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
+    const accessCard1RoleAfterRes = await runLocal(manager, 'AccessCard1', 'getRole', {})
     assert.deepStrictEqual(accessCard1RoleAfterRes.my_role, USER)
   })
 
@@ -548,7 +501,7 @@ describe('Asserts', function () {
     await manager.contracts['AccessCard1'].runContract('deactivateHimself', {}, keysForAccessCard1).catch(e => { error = e })
     assert.deepStrictEqual(error.data.exit_code, 106)
     // check that role has not been changed
-    const accessCard1RoleAfterRes = await manager.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
+    const accessCard1RoleAfterRes = await runLocal(manager, 'AccessCard1', 'getRole', {})
     assert.deepStrictEqual(accessCard1RoleAfterRes.my_role, SUPERADMIN)
   })
 })

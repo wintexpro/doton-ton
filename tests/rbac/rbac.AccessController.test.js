@@ -8,7 +8,7 @@
 const assert = require('assert')
 const fs = require('fs')
 const path = require('path')
-const { toHex } = require('../helper')
+const runLocal = require('../helper').runLocal
 
 const accessCardAbiPath = path.join(__dirname, '../../rbac/AccessCard.abi.json')
 const accessCardTvcPath = path.join(__dirname, '../../rbac/AccessCard.tvc')
@@ -24,12 +24,11 @@ describe('RBAC: AccessController', function () {
   beforeEach(async function () {
     manager = new Manager()
     await manager.createClient(['http://localhost:80/graphql'])
-    await manager.createKeys()
-    manager.loadContract(
+    await manager.loadContract(
       path.join(__dirname, '../../rbac/AccessController.tvc'),
       path.join(__dirname, '../../rbac/AccessController.abi.json')
     )
-    manager.loadContract(
+    await manager.loadContract(
       accessCardTvcPath,
       accessCardAbiPath
     )
@@ -48,7 +47,7 @@ describe('RBAC: AccessController', function () {
       _accessCardInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' }),
       _initialValue: 1000000
     })
-    const superAdminAddressRes = await manager.contracts['AccessController'].runContract('getSuperAdminAddress', {})
+    const superAdminAddressRes = await runLocal(manager, 'AccessController', 'getSuperAdminAddress', {})
     assert.deepStrictEqual(superAdminAddressRes.value0, manager.contracts['AccessController'].address)
   })
 
@@ -58,7 +57,7 @@ describe('RBAC: AccessController', function () {
       _accessCardInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' }),
       _initialValue: 1000000
     })
-    const getInitialValueRes = await manager.contracts['AccessController'].runContract('getInitialValue', {})
+    const getInitialValueRes = await runLocal(manager, 'AccessController', 'getInitialValue', {})
     assert.deepStrictEqual(parseInt(getInitialValueRes.value0, 16), initialValue)
     // интересно, что assert.equal(getInitialValueRes.value0, initialValue) также вернёт true. Судя по всему, equal неявно приводит аргументы к одному типу
   })
@@ -71,7 +70,7 @@ describe('RBAC: AccessController', function () {
     const newInitialValue = 2000000
     await manager.contracts['AccessController'].runContract('updateInitialValue', { newInitialValue })
 
-    const getInitialValueRes = await manager.contracts['AccessController'].runContract('getInitialValue', {})
+    const getInitialValueRes = await runLocal(manager, 'AccessController', 'getInitialValue', {})
     assert.deepStrictEqual(parseInt(getInitialValueRes.value0, 16), newInitialValue)
   })
 
@@ -96,7 +95,7 @@ describe('RBAC: AccessController', function () {
     assert.ok((error.data.exit_code === 102) || (error.data.tip === 'Check sign keys')) // TODO см. тудушку в AccessController
 
     // check that initial value was not changed
-    const getInitialValueRes = await manager.contracts['AccessController'].runContract('getInitialValue', {})
+    const getInitialValueRes = await runLocal(manager, 'AccessController', 'getInitialValue', {})
     assert.deepStrictEqual(parseInt(getInitialValueRes.value0, 16), initialValue)
   })
 
@@ -126,14 +125,14 @@ describe('RBAC: AccessController', function () {
     assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true)
 
     // check superAdminAddress before granting
-    const superAdminAddressRes = await manager.contracts['AccessController'].runContract('getSuperAdminAddress', {})
+    const superAdminAddressRes = await runLocal(manager, 'AccessController', 'getSuperAdminAddress', {})
     assert.deepStrictEqual(superAdminAddressRes.value0, manager.contracts['AccessController'].address)
     // --- Grant first superadmin ---
     await manager.contracts['AccessController'].runContract('grantSuperAdminRole', {
       accessCardAddress: manager.contracts['AccessCard1'].address
     })
     // check superAdminAddress after granting
-    const superAdminAddressAfterGrantingRes = await manager.contracts['AccessController'].runContract('getSuperAdminAddress', {})
+    const superAdminAddressAfterGrantingRes = await runLocal(manager, 'AccessController', 'getSuperAdminAddress', {})
     assert.deepStrictEqual(superAdminAddressAfterGrantingRes.value0, manager.contracts['AccessCard1'].address)
   })
 
@@ -199,11 +198,11 @@ describe('RBAC: AccessController', function () {
     assert.deepStrictEqual(error.data.exit_code, 101)
 
     // check that superAdminAddress not changed
-    const superAdminAddressRes = await manager.contracts['AccessController'].runContract('getSuperAdminAddress', {})
+    const superAdminAddressRes = await runLocal(manager, 'AccessController', 'getSuperAdminAddress', {})
     assert.deepStrictEqual(superAdminAddressRes.value0, manager.contracts['AccessCard1'].address)
   })
 
-  it('Test: changeAdmin - should forbid to call by himself', async function () {
+  it('Test: changeSuperAdmin - should forbid to call by not AccessCard (check invalid init state error)', async function () {
     await manager.contracts['AccessController'].deployContract({
       _accessCardInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' }),
       _initialValue: 1000000
@@ -215,12 +214,11 @@ describe('RBAC: AccessController', function () {
     await wallet.Deploy()
 
     let error
-    // Try to call changeAdmin by himself
-    await manager.contracts['AccessController'].runContract('changeAdmin', {
+    // Try to call changeSuperAdmin by himself
+    await manager.contracts['AccessController'].runContract('changeSuperAdmin', {
       newSuperAdminAddress: wallet.address,
-      oldSuperAdminAddress: manager.contracts['AccessController'].address,
-      value2: toHex('USER')
+      touchingPublicKey: '0x' + keysForWallet.public
     }).catch(e => { error = e })
-    assert.deepStrictEqual(error.data.exit_code, 103)
+    assert.deepStrictEqual(error.data.exit_code, 111)
   })
 })

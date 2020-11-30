@@ -1,11 +1,10 @@
 pragma solidity >= 0.6.0;
 
 interface IAccessController {
-    function changeSuperAdmin(/* uint8 previousTargetRole,  */address newSuperAdminAddress, uint256 myPublicKey/* , address oldSuperAdminAddress */) external;
+    function changeSuperAdmin(address newSuperAdminAddress, uint256 myPublicKey) external;
 }
 
 interface IAccessCard {
-    //function rev(uint8 van, uint8 tu, uint256 fri) external;
     function changeRole(uint8 initiatiorRole, uint8 role, uint256 touchingPublicKey) external;
     function grantSuperAdmin() external;
 }
@@ -21,22 +20,17 @@ contract AccessCard {
     uint8 constant MODERATOR = 3;
     uint8 constant USER = 4;
     uint8 myRole;
-
+/* 
     // debug variables
     uint128 bounce;
     uint bounceCounter;
-
-    // debug function
-    /* function rev(uint8 van, uint8 tu, uint256 fri) external {
-        revert();
-    } */
 
     // debug function
     function getInfo() public view returns (uint128, uint, uint8) {
         tvm.accept();
         return (bounce, bounceCounter, myRole);
     }
-
+*/
     /*
      * Проверяет, что вызываемый текущим контрактом контракт имеет такой же init state
      */
@@ -83,7 +77,7 @@ contract AccessCard {
     }
 
     function getRole() public view returns (uint8 my_role) {
-        tvm.accept();
+        tvm.accept(); // TODO убрать, когда найдём способ в тестах на dev-сетке передавать в TON-SDK параметр value.
         return myRole;
     }
 
@@ -109,7 +103,7 @@ contract AccessCard {
      */
     function changeRole(uint8 initiatorRole, uint8 role, uint256 touchingPublicKey) isSameWallet(touchingPublicKey) external {
         require(initiatorRole != ADMIN || (myRole == USER || myRole == MODERATOR), 102, "Insuitable target role");
-        myRole = role; // _changeRole(role);
+        myRole = role;
         if (role == SUPERADMIN) {
             IAccessController(accessControllerAddress).changeSuperAdmin{bounce:true, value:20000000}(address(this), myPublicKey);
         }
@@ -128,8 +122,10 @@ contract AccessCard {
     // Function onBounce is executed on inbound messages with set <bounced> flag. This function can not be called by external/internal message
 	// This function takes the body of the message as an argument.
 	onBounce(TvmSlice slice) external {
-		bounceCounter++; // Increase the counter.
+		/* // debug
+        bounceCounter++; Increase the counter.
         bounce = 66;
+        */     
 		// Start decoding the message. First 32 bits store the function id.
 		uint32 functionId = slice.decode(uint32);
         if (functionId == tvm.functionId(IAccessCard.changeRole)) { // по идее в текущем коде нет кейсов, при которых требуется этот bounce

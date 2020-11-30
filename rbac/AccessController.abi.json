@@ -47,7 +47,7 @@
 			"name": "changeSuperAdmin",
 			"inputs": [
 				{"name":"newSuperAdminAddress","type":"address"},
-				{"name":"targetPubKey","type":"uint256"}
+				{"name":"touchingPublicKey","type":"uint256"}
 			],
 			"outputs": [
 			]
