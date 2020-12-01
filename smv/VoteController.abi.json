@@ -1,0 +1,66 @@
+{
+	"ABI version": 2,
+	"header": ["time"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"_proposalInitState","type":"cell"},
+				{"name":"_ballotInitState","type":"cell"},
+				{"name":"_deployInitialValue","type":"uint128"},
+				{"name":"_publicKey","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "createProposal",
+			"inputs": [
+				{"name":"proposalPublicKey","type":"uint256"},
+				{"name":"proposalId","type":"uint256"},
+				{"name":"votersAmount","type":"uint256"}
+			],
+			"outputs": [
+				{"name":"proposalAddress","type":"address"}
+			]
+		},
+		{
+			"name": "getDeployInitialValue",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
+			"name": "setDeployInitialValue",
+			"inputs": [
+				{"name":"_deployInitialValue","type":"uint128"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
+			"name": "getBallotCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"ballotCode","type":"cell"}
+			]
+		},
+		{
+			"name": "getProposalInfoById",
+			"inputs": [
+				{"name":"proposalId","type":"uint256"}
+			],
+			"outputs": [
+				{"components":[{"name":"proposalPublicKey","type":"uint256"},{"name":"proposalAddress","type":"address"},{"name":"votersAmount","type":"uint256"}],"name":"proposal","type":"tuple"}
+			]
+		}
+	],
+	"data": [
+	],
+	"events": [
+	]
+}
