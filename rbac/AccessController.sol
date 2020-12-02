@@ -13,9 +13,8 @@ contract AccessController {
     address superAdminAddress; // super-admin public key. Только один AccessCard может иметь роль superadmin.
 
     // Modifier that allows public function to accept external calls only from RelayNodeF.
-    modifier acceptOnlyOwner {
+    modifier onlyOwner {
         require(tvm.pubkey() == msg.pubkey(), 102, 'Only for owners');
-        tvm.accept();
         _;
     }
 
@@ -39,14 +38,15 @@ contract AccessController {
         return initialValue;
     }
 
-    function updateInitialValue(uint128 newInitialValue) acceptOnlyOwner() external { // TODO разобраться с external|internal|public|private для каждого метода
+    function updateInitialValue(uint128 newInitialValue) onlyOwner external { // TODO разобраться с external|internal|public|private для каждого метода
+        tvm.accept();
         initialValue = newInitialValue;
     }
 
     /**
      * Grant the first superadmin
      */
-    function grantSuperAdminRole(address accessCardAddress) acceptOnlyOwner() external {
+    function grantSuperAdminRole(address accessCardAddress) onlyOwner external {
         require(superAdminAddress == address(this), 101, 'Superadmin already created earler');
         tvm.accept();
 		superAdminAddress = accessCardAddress; // address(tvm.hash(stateInitWithKey));
