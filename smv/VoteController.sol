@@ -32,7 +32,7 @@ contract VoteController {
         _;
     }
 
-    // TODO not a public
+    // TODO not just a public
     function createProposal(uint256 proposalPublicKey, uint256 proposalId, uint256 votersAmount) public returns (address proposalAddress) {
         require (proposals[proposalId].proposalPublicKey == 0);
         tvm.accept();
