@@ -1,0 +1,62 @@
+{
+	"ABI version": 2,
+	"header": ["time"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"_accessControllerAddress","type":"address"},
+				{"name":"_myPublicKey","type":"uint256"},
+				{"name":"_superAdminAddress","type":"address"},
+				{"name":"_myInitState","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "grantSuperAdmin",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getRole",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"my_role","type":"uint8"}
+			]
+		},
+		{
+			"name": "grantRole",
+			"inputs": [
+				{"name":"role","type":"uint8"},
+				{"name":"targetAddress","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "changeRole",
+			"inputs": [
+				{"name":"initiatorRole","type":"uint8"},
+				{"name":"role","type":"uint8"},
+				{"name":"touchingPublicKey","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "deactivateHimself",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		}
+	],
+	"data": [
+	],
+	"events": [
+	]
+}

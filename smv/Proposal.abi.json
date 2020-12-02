@@ -1,0 +1,46 @@
+{
+	"ABI version": 2,
+	"header": ["time"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"_ballotInitState","type":"cell"},
+				{"name":"_publicKey","type":"uint256"},
+				{"name":"_proposalId","type":"uint256"},
+				{"name":"_votersAmount","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getYesVotes",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"yesVotes","type":"uint256"}
+			]
+		},
+		{
+			"name": "getNoVotes",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"noVotes","type":"uint256"}
+			]
+		},
+		{
+			"name": "vote",
+			"inputs": [
+				{"name":"choice","type":"uint8"},
+				{"name":"ballotPublicKey","type":"uint256"}
+			],
+			"outputs": [
+			]
+		}
+	],
+	"data": [
+	],
+	"events": [
+	]
+}
