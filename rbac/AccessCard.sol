@@ -77,7 +77,6 @@ contract AccessCard {
     }
 
     function getRole() public view returns (uint8 my_role) {
-        tvm.accept(); // TODO убрать, когда найдём способ в тестах на dev-сетке передавать в TON-SDK параметр value.
         return myRole;
     }
 

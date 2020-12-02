@@ -335,7 +335,7 @@ describe('Asserts', function () {
     await devMgr.loadContract(accessCardTvcPath, accessCardAbiPath, { contractName: 'AccessCard3' })
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1', true, devMgr, keysForAccessController)
     const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2', true, devMgr, keysForAccessController)
-    const keysForAccessCard3 = await deployAccessCardFromAccessController('AccessCard3', true, devMgr, keysForAccessController)
+    await deployAccessCardFromAccessController('AccessCard3', true, devMgr, keysForAccessController)
     console.log('AccessCard1:', devMgr.contracts['AccessCard1'].address)
     console.log('AccessCard2:', devMgr.contracts['AccessCard2'].address)
     console.log('AccessCard3:', devMgr.contracts['AccessCard3'].address)
@@ -348,20 +348,21 @@ describe('Asserts', function () {
     await devMgr.contracts['AccessController'].runContract('grantSuperAdminRole', {
       accessCardAddress: devMgr.contracts['AccessCard1'].address
     }, keysForAccessController).catch(e => console.log('grantSuperAdminRole:', e))
-    await new Promise(resolve => resolve(resolve, 5000))
+    await new Promise(resolve => setTimeout(resolve, 5000))
 
     // grant ADMIN to second AccessCard by first AccessCard
     await devMgr.contracts['AccessCard1'].runContract('grantRole', { role: ADMIN, targetAddress: devMgr.contracts['AccessCard2'].address }, keysForAccessCard1)
-    await new Promise(resolve => resolve(resolve, 10000))
+    await new Promise(resolve => setTimeout(resolve, 10000))
     // check that role was changed
-    const accessCard2RoleRes = await devMgr.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
-    assert.deepStrictEqual(accessCard2RoleRes.my_role, ADMIN)
+    const accessCard2RoleRes = await devMgr.contracts['AccessCard2'].runLocal('getRole', {})
+    assert.deepStrictEqual(accessCard2RoleRes.output.my_role, ADMIN)
 
     // grant ADMIN to third AccessCard by first AccessCard
     await devMgr.contracts['AccessCard1'].runContract('grantRole', { role: ADMIN, targetAddress: devMgr.contracts['AccessCard3'].address }, keysForAccessCard1)
+    await new Promise(resolve => setTimeout(resolve, 10000))
     // check third AccessCard role
-    const accessCard3RoleRes = await devMgr.contracts['AccessCard3'].runContract('getRole', {}, keysForAccessCard3)
-    assert.deepStrictEqual(accessCard3RoleRes.my_role, ADMIN)
+    const accessCard3RoleRes = await devMgr.contracts['AccessCard3'].runLocal('getRole', {})
+    assert.deepStrictEqual(accessCard3RoleRes.output.my_role, ADMIN)
 
     // ========== cases: ==========
     // ========== case 1: try to grant MODERATOR by ADMIN to ADMIN ==========
@@ -372,18 +373,18 @@ describe('Asserts', function () {
       { role: MODERATOR, targetAddress: devMgr.contracts['AccessCard3'].address },
       keysForAccessCard2
     )
-    await new Promise(resolve => resolve(resolve, 20000))
+    await new Promise(resolve => setTimeout(resolve, 20000))
     // for debug: next commented lines
     // const getInfo1 = await devMgr.contracts['AccessCard1'].runContract('getInfo', {}, keysForAccessCard1).catch(e => console.log(e))
     // const getInfo2 = await devMgr.contracts['AccessCard2'].runContract('getInfo', {}, keysForAccessCard2).catch(e => console.log(e))
     // const getInfo3 = await devMgr.contracts['AccessCard3'].runContract('getInfo', {}, keysForAccessCard3).catch(e => console.log(e))
     // console.log(getInfo1, getInfo2, getInfo3)
     // check that third AccessCard role has not been changed
-    const accessCard3RoleAfterCase1Res = await devMgr.contracts['AccessCard3'].runContract('getRole', {}, keysForAccessCard3)
-    assert.deepStrictEqual(accessCard3RoleRes.my_role, accessCard3RoleAfterCase1Res.my_role)
+    const accessCard3RoleAfterCase1Res = await devMgr.contracts['AccessCard3'].runLocal('getRole', {})
+    assert.deepStrictEqual(accessCard3RoleRes.output.my_role, accessCard3RoleAfterCase1Res.output.my_role)
     // check that second AccessCard role has not been changed
-    const accessCard2RoleAfterCase1Res = await devMgr.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
-    assert.deepStrictEqual(accessCard2RoleAfterCase1Res.my_role, accessCard2RoleRes.my_role)
+    const accessCard2RoleAfterCase1Res = await devMgr.contracts['AccessCard2'].runLocal('getRole', {})
+    assert.deepStrictEqual(accessCard2RoleAfterCase1Res.output.my_role, accessCard2RoleRes.output.my_role)
 
     // ========== case 2: try to grant MODERATOR by ADMIN to SUPERADMIN ==========
     console.log('case 2:')
@@ -393,18 +394,18 @@ describe('Asserts', function () {
       { role: MODERATOR, targetAddress: devMgr.contracts['AccessCard1'].address },
       keysForAccessCard2
     )
-    await new Promise(resolve => resolve(resolve, 20000))
+    await new Promise(resolve => setTimeout(resolve, 20000))
     // for debug: next commented lines
     // const getInfo11 = await devMgr.contracts['AccessCard1'].runContract('getInfo', {}, keysForAccessCard1).catch(e => console.log(e))
     // const getInfo22 = await devMgr.contracts['AccessCard2'].runContract('getInfo', {}, keysForAccessCard2).catch(e => console.log(e))
     // const getInfo33 = await devMgr.contracts['AccessCard3'].runContract('getInfo', {}, keysForAccessCard3).catch(e => console.log(e))
     // console.log(getInfo11, getInfo22, getInfo33)
     // check that first AccessCard role has not been changed
-    const accessCard1RoleAfterCase2Res = await devMgr.contracts['AccessCard1'].runContract('getRole', {}, keysForAccessCard1)
-    assert.deepStrictEqual(accessCard1RoleAfterCase2Res.my_role, SUPERADMIN)
+    const accessCard1RoleAfterCase2Res = await devMgr.contracts['AccessCard1'].runLocal('getRole', {})
+    assert.deepStrictEqual(accessCard1RoleAfterCase2Res.output.my_role, SUPERADMIN)
     // check that second AccessCard role has not been changed
-    const accessCard2RoleAfterCase2Res = await devMgr.contracts['AccessCard2'].runContract('getRole', {}, keysForAccessCard2)
-    assert.deepStrictEqual(accessCard2RoleAfterCase2Res.my_role, accessCard2RoleRes.my_role)
+    const accessCard2RoleAfterCase2Res = await devMgr.contracts['AccessCard2'].runLocal('getRole', {})
+    assert.deepStrictEqual(accessCard2RoleAfterCase2Res.output.my_role, accessCard2RoleRes.output.my_role)
   })
 
   it('Test: grantRole (+ getRole, + onBounce) - should not change target role if you can not grant this role because target role insuitable', async function () {

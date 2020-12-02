@@ -83,14 +83,14 @@ describe('RBAC: AccessController', function () {
     assert.deepStrictEqual(manager.contracts['AccessController'].isDeployed, true)
 
     // generate another contract
-    const keysForWallet = await manager.createKeysAndReturn()
+    /* const keysForWallet = await manager.createKeysAndReturn()
     const wallet = await manager.createWallet(keysForWallet)
-    await wallet.Deploy()
+    await wallet.deploy() */
 
     // check that can not update initial value by not owner
     let error
     await manager.contracts['AccessController'].runContract(
-      'updateInitialValue', { newInitialValue: 2000000 }, keysForWallet /* keysForAccessController2 */
+      'updateInitialValue', { newInitialValue: 2000000 }, null/* , keysForWallet  */
     ).catch(e => { error = e })
     assert.ok((error.data.exit_code === 102) || (error.data.tip === 'Check sign keys')) // TODO см. тудушку в AccessController
 
@@ -211,10 +211,10 @@ describe('RBAC: AccessController', function () {
     // generate another contract
     const keysForWallet = await manager.createKeysAndReturn()
     const wallet = await manager.createWallet(keysForWallet)
-    await wallet.Deploy()
+    await wallet.deploy()
 
     let error
-    // Try to call changeSuperAdmin by himself
+    // Try to call changeSuperAdmin by contract with another init state
     await manager.contracts['AccessController'].runContract('changeSuperAdmin', {
       newSuperAdminAddress: wallet.address,
       touchingPublicKey: '0x' + keysForWallet.public

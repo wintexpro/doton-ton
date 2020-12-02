@@ -38,7 +38,7 @@ contract AccessController {
         return initialValue;
     }
 
-    function updateInitialValue(uint128 newInitialValue) onlyOwner external { // TODO разобраться с external|internal|public|private для каждого метода
+    function updateInitialValue(uint128 newInitialValue) onlyOwner public { // TODO разобраться с external|internal|public|private для каждого метода
         tvm.accept();
         initialValue = newInitialValue;
     }
