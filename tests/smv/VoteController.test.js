@@ -7,15 +7,14 @@ describe('VoteController', function () {
   let voteControllerKeys
 
   before(async function () {
-    await manager.CreateClient(['http://localhost:80/graphql'])
-    await manager.createKeys()
+    await manager.createClient(['http://localhost:80/graphql'])
     voteControllerKeys = await manager.createKeysAndReturn()
-    manager.loadContract(
+    await manager.loadContract(
       path.join(__dirname, '../../smv/VoteController.tvc'),
       path.join(__dirname, '../../smv/VoteController.abi.json'),
-      'VoteController_1'
+      { contractName: 'VoteController_1', keys: voteControllerKeys }
     )
-    await manager.contracts.VoteController_1.DeployContract({
+    await manager.contracts.VoteController_1.deployContract({
       _proposalInitState: fs.readFileSync(path.join(__dirname, '../../smv/Proposal.tvc'), { encoding: 'base64' }),
       _ballotInitState: fs.readFileSync(path.join(__dirname, '../../smv/Ballot.tvc'), { encoding: 'base64' }),
       _deployInitialValue: 20000,
@@ -48,7 +47,7 @@ describe('VoteController', function () {
         abi: manager.contracts.VoteController_1.contractPackage.abi,
         input: {}
       })).output.value0, 16)
-      await manager.contracts.VoteController_1.RunContract('setDeployInitialValue', {
+      await manager.contracts.VoteController_1.runContract('setDeployInitialValue', {
         _deployInitialValue: deployInitialValueOutput + 1
       }, voteControllerKeys)
       const deployNewInitialValueOutput = parseInt((await manager.client.contracts.runLocal({
@@ -68,7 +67,7 @@ describe('VoteController', function () {
         input: {}
       })).output.value0, 16)
       const anotherKeys = await manager.createKeysAndReturn()
-      await assert.rejects(manager.contracts.VoteController_1.RunContract('setDeployInitialValue', {
+      await assert.rejects(manager.contracts.VoteController_1.runContract('setDeployInitialValue', {
         _deployInitialValue: deployInitialValueOutput + 1
       }, anotherKeys), (err) => {
         assert.strictEqual(err.message, 'Contract execution was terminated with error')
@@ -90,12 +89,12 @@ describe('VoteController', function () {
 
     before(async function () {
       voteControllerKeys = await manager.createKeysAndReturn()
-      manager.loadContract(
+      await manager.loadContract(
         path.join(__dirname, '../../smv/VoteController.tvc'),
         path.join(__dirname, '../../smv/VoteController.abi.json'),
-        'VoteController_2'
+        { contractName: 'VoteController_2', keys: voteControllerKeys }
       )
-      await manager.contracts.VoteController_2.DeployContract({
+      await manager.contracts.VoteController_2.deployContract({
         _proposalInitState: fs.readFileSync(path.join(__dirname, '../../smv/Proposal.tvc'), { encoding: 'base64' }),
         _ballotInitState: fs.readFileSync(path.join(__dirname, '../../smv/Ballot.tvc'), { encoding: 'base64' }),
         _deployInitialValue: 1000000,
@@ -106,18 +105,18 @@ describe('VoteController', function () {
     it('VoteController should create proposal', async function () {
       const beforeAccountsCount = await manager.client.queries.getAccountsCount()
       const proposalKeys = await manager.createKeysAndReturn()
-      await manager.contracts.VoteController_2.RunContract('createProposal', {
+      await manager.contracts.VoteController_2.runContract('createProposal', {
         proposalPublicKey: '0x' + proposalKeys.public,
         proposalId: Math.floor(Math.random() * Math.floor(100)),
         votersAmount: 1
-      }, voteControllerKeys)
+      }, voteControllerKeys).catch(e => console.log(e))
       const afterAccountsCount = await manager.client.queries.getAccountsCount()
       assert.equal(beforeAccountsCount, afterAccountsCount - 1)
     })
     it('VoteController should return proposal info (naive)', async function () {
       const proposalId = Math.floor(Math.random() * Math.floor(100))
       const proposalKeys = await manager.createKeysAndReturn()
-      const createProposalResult = await manager.contracts.VoteController_2.RunContract('createProposal', {
+      const createProposalResult = await manager.contracts.VoteController_2.runContract('createProposal', {
         proposalPublicKey: '0x' + proposalKeys.public,
         proposalId,
         votersAmount: 1

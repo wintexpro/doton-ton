@@ -6,7 +6,7 @@ interface IProposal {
 
 contract Ballot {
     bool isUsed = false;
-    address usedFor;
+    address usedFor = address(0);
 
     function vote(uint8 choice, IProposal proposal) external {
         require(choice == 0 || choice == 1);
@@ -14,7 +14,7 @@ contract Ballot {
         tvm.accept();
         isUsed = true;
         usedFor = proposal;
-        proposal.vote(choice, tvm.pubkey());
+        proposal.vote{bounce:true, value:200000000}(choice, tvm.pubkey()); //TODO: too big value
     }
 
     function getInfo() public view returns (bool, address) {

@@ -125,7 +125,7 @@ describe('Ballot', function () {
     // await devMgr.giveToAddress(devMgr.contracts['BadBallot'].address).catch(e => console.log('e::', e)) // only for local test
     // deploy Ballot
     await devMgr.contracts['BadBallot'].deployContract({}, false, badBallotKeys)
-    console.log('Bad Ballot address:', devMgr.contracts['Ballot'].address)
+    console.log('Bad Ballot address:', devMgr.contracts['BadBallot'].address)
 
     // try fote for proposal from bad ballot
     await devMgr.contracts['BadBallot'].runContract('vote', { choice: 1, proposal: devMgr.contracts['Proposal'].address }, badBallotKeys)
@@ -139,6 +139,6 @@ describe('Ballot', function () {
     const getInfoRes = await devMgr.contracts['BadBallot'].runLocal('getInfo', {}, badBallotKeys) // runContract('getInfo', {}, badBallotKeys)
     console.log('getInfoRes:', getInfoRes)
     assert.deepStrictEqual(getInfoRes.output.value0, false)
-    assert.deepStrictEqual(getInfoRes.output.value1, '0')
+    assert.deepStrictEqual(getInfoRes.output.value1, '0:0000000000000000000000000000000000000000000000000000000000000000')
   })
 })
