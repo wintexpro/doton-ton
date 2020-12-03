@@ -113,6 +113,22 @@ describe('VoteController', function () {
       const afterAccountsCount = await manager.client.queries.getAccountsCount()
       assert.equal(beforeAccountsCount, afterAccountsCount - 1)
     })
+    it('VoteController should not create proposal with same id', async function () {
+      const proposalKeys = await manager.createKeysAndReturn()
+      await manager.contracts.VoteController_2.runContract('createProposal', {
+        proposalPublicKey: '0x' + proposalKeys.public,
+        proposalId: Math.floor(Math.random() * Math.floor(100)),
+        votersAmount: 1
+      }, voteControllerKeys).catch(e => console.log(e))
+      assertError(
+        manager.contracts.VoteController_2.runContract('createProposal', {
+          proposalPublicKey: '0x' + proposalKeys.public,
+          proposalId: Math.floor(Math.random() * Math.floor(100)),
+          votersAmount: 1
+        }, voteControllerKeys),
+        100
+      )
+    })
     it('VoteController should return proposal info (naive)', async function () {
       const proposalId = Math.floor(Math.random() * Math.floor(100))
       const proposalKeys = await manager.createKeysAndReturn()
