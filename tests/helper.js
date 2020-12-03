@@ -7,7 +7,7 @@ function fromHexWith0x (_string) {
 }
 
 function toHex (_string, isWith0x = true) {
-  return (isWith0x ? '0x' : '') + Buffer.from(_string, 'utf8').toString('hex')
+  return (isWith0x ? '0x' : '') + Buffer.from(String(_string), 'utf8').toString('hex')
 }
 
 /** runLocal for contract from manager (contract MUST BE in manager) */
