@@ -20,6 +20,9 @@ contract AccessCard {
     uint8 constant MODERATOR = 3;
     uint8 constant USER = 4;
     uint8 myRole;
+
+    uint128 valueForChangeRole;
+    uint128 valueForChangeSuperAdmin;
 /* 
     // debug variables
     uint128 bounce;
@@ -64,6 +67,28 @@ contract AccessCard {
         myPublicKey = _myPublicKey;
         myInitState = _myInitState;
         myRole = USER;
+        valueForChangeRole = 200000000;
+        valueForChangeSuperAdmin =  20000000;
+    }
+
+    // === Work with values that need for sending the messages to other contracts: ===
+    
+    function updateValueForChangeRole(uint128 newValue) onlyOwner public {
+        tvm.accept();
+        valueForChangeRole = newValue;
+    }
+
+    function getValueForChangeRole() public view returns (uint128) {
+        return valueForChangeRole;
+    }
+
+    function updateValueForChangeSuperAdmin(uint128 newValue) onlyOwner public {
+        tvm.accept();
+        valueForChangeSuperAdmin = newValue;
+    }
+
+    function getValueForChangeSuperAdmin() public view returns (uint128) {
+        return valueForChangeSuperAdmin;
     }
 
     // === Work with roles: ===
@@ -94,7 +119,7 @@ contract AccessCard {
             calledByHavingRole = ADMIN;
             myRole = USER;
         }
-        IAccessCard(targetAddress).changeRole{bounce:true, value:200000000}(calledByHavingRole, role, myPublicKey); 
+        IAccessCard(targetAddress).changeRole{bounce:true, value: valueForChangeRole}(calledByHavingRole, role, myPublicKey); 
     }
 
     /**
@@ -104,7 +129,7 @@ contract AccessCard {
         require(initiatorRole != ADMIN || (myRole == USER || myRole == MODERATOR), 102, "Insuitable target role");
         myRole = role;
         if (role == SUPERADMIN) {
-            IAccessController(accessControllerAddress).changeSuperAdmin{bounce:true, value:20000000}(address(this), myPublicKey);
+            IAccessController(accessControllerAddress).changeSuperAdmin{bounce:true, value:valueForChangeSuperAdmin}(address(this), myPublicKey);
         }
     }
 

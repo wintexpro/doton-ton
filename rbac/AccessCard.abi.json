@@ -14,6 +14,38 @@
 			]
 		},
 		{
+			"name": "updateValueForChangeRole",
+			"inputs": [
+				{"name":"newValue","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getValueForChangeRole",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
+			"name": "updateValueForChangeSuperAdmin",
+			"inputs": [
+				{"name":"newValue","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getValueForChangeSuperAdmin",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
 			"name": "grantSuperAdmin",
 			"inputs": [
 			],

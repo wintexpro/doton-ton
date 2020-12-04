@@ -9,6 +9,7 @@ const assert = require('assert')
 const fs = require('fs')
 const path = require('path')
 const runLocal = require('../helper').runLocal
+const toHex = require('../helper').toHex
 
 const accessCardAbiPath = path.join(__dirname, '../../rbac/AccessCard.abi.json')
 const accessCardTvcPath = path.join(__dirname, '../../rbac/AccessCard.tvc')
@@ -504,5 +505,55 @@ describe('Asserts', function () {
     // check that role has not been changed
     const accessCard1RoleAfterRes = await runLocal(manager, 'AccessCard1', 'getRole', {})
     assert.deepStrictEqual(accessCard1RoleAfterRes.my_role, SUPERADMIN)
+  })
+
+  it('Test: updateValueForChangeRole - should update value', async function () {
+    await deployAccessCardFromAccessController('AccessCard1')
+    const newValue = toHex(123456789)
+    await manager.contracts['AccessCard1'].runContract('updateValueForChangeRole', { newValue })
+
+    const getValueForChangeRoleRes = await manager.contracts['AccessCard1'].runLocal('getValueForChangeRole', {})
+    assert.deepStrictEqual(getValueForChangeRoleRes.output.value0, newValue)
+  })
+
+  it('Test: updateValueForChangeRole - should forbid update value by not owner', async function () {
+    await deployAccessCardFromAccessController('AccessCard1')
+    const getValueForChangeRoleBeforeRes = await manager.contracts['AccessCard1'].runLocal('getValueForChangeRole', {})
+
+    // check that can not update initial value by not owner
+    let error
+    await manager.contracts['AccessCard1'].runContract(
+      'updateValueForChangeRole', { newValue: toHex(123456789) }, null
+    ).catch(e => { error = e })
+    assert.ok((error.data.exit_code === 108) || (error.data.tip === 'Check sign keys'))
+
+    // check that initial value was not changed
+    const getValueForChangeRoleRes = await manager.contracts['AccessCard1'].runLocal('getValueForChangeRole', {})
+    assert.deepStrictEqual(getValueForChangeRoleBeforeRes.output.value0, getValueForChangeRoleRes.output.value0)
+  })
+
+  it('Test: updateValueForChangeSuperAdmin - should update value', async function () {
+    await deployAccessCardFromAccessController('AccessCard1')
+    const newValue = toHex(123456789)
+    await manager.contracts['AccessCard1'].runContract('updateValueForChangeSuperAdmin', { newValue })
+
+    const getValueForChangeRoleRes = await manager.contracts['AccessCard1'].runLocal('getValueForChangeSuperAdmin', {})
+    assert.deepStrictEqual(getValueForChangeRoleRes.output.value0, newValue)
+  })
+
+  it('Test: updateValueForChangeSuperAdmin - should forbid update value by not owner', async function () {
+    await deployAccessCardFromAccessController('AccessCard1')
+    const getValueForChangeSuperAdminBeforeRes = await manager.contracts['AccessCard1'].runLocal('getValueForChangeSuperAdmin', {})
+
+    // check that can not update initial value by not owner
+    let error
+    await manager.contracts['AccessCard1'].runContract(
+      'updateValueForChangeSuperAdmin', { newValue: toHex(123456789) }, null
+    ).catch(e => { error = e })
+    assert.ok((error.data.exit_code === 108) || (error.data.tip === 'Check sign keys'))
+
+    // check that initial value was not changed
+    const getValueForChangeSuperAdminRes = await manager.contracts['AccessCard1'].runLocal('getValueForChangeSuperAdmin', {})
+    assert.deepStrictEqual(getValueForChangeSuperAdminBeforeRes.output.value0, getValueForChangeSuperAdminRes.output.value0)
   })
 })
