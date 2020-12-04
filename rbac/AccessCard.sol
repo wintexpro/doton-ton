@@ -23,17 +23,7 @@ contract AccessCard {
 
     uint128 valueForChangeRole;
     uint128 valueForChangeSuperAdmin;
-/* 
-    // debug variables
-    uint128 bounce;
-    uint bounceCounter;
 
-    // debug function
-    function getInfo() public view returns (uint128, uint, uint8) {
-        tvm.accept();
-        return (bounce, bounceCounter, myRole);
-    }
-*/
     /*
      * Проверяет, что вызываемый текущим контрактом контракт имеет такой же init state
      */
@@ -146,10 +136,6 @@ contract AccessCard {
     // Function onBounce is executed on inbound messages with set <bounced> flag. This function can not be called by external/internal message
 	// This function takes the body of the message as an argument.
 	onBounce(TvmSlice slice) external {
-		/* // debug
-        bounceCounter++; Increase the counter.
-        bounce = 66;
-        */     
 		// Start decoding the message. First 32 bits store the function id.
 		uint32 functionId = slice.decode(uint32);
         if (functionId == tvm.functionId(IAccessCard.changeRole)) { // по идее в текущем коде нет кейсов, при которых требуется этот bounce
