@@ -2,18 +2,16 @@ pragma solidity >= 0.6.0;
 
 contract Receiver {
     
-    uint counter = 0;
-    mapping (uint256 => bytes32) messages;
+    mapping (uint256 => uint256) _nonce;
 
-    event DataReceived(uint256 number, bytes32 data);
+    event DataReceived(bytes32 data, uint256 destinationChainId, uint256 nonce);
 
-    function receiveData(bytes32 data) external {
-        messages[counter] = data;
-        emit DataReceived(counter, data);
-        counter++;
+    function receiveData(bytes32 data, uint256 destinationChainId) external {
+        _nonce[destinationChainId]++;
+        emit DataReceived(data, destinationChainId, _nonce[destinationChainId]);
     }
 
-    function getMessageByNumber(uint256 number) public returns(bytes32 message) {
-        return messages[number];
+    function getNonceByChainId(uint256 destinationChainId) public returns(uint256 nonce) {
+        return _nonce[destinationChainId];
     }
 }

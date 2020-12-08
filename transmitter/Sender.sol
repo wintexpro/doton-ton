@@ -1,7 +1,7 @@
 pragma solidity >= 0.6.0;
 
 interface IReceiver {
-    function receiveData(bytes32 data) external;
+    function receiveData(bytes32 data, uint256 destinationChainId) external;
 }
 
 contract Sender {
@@ -11,8 +11,8 @@ contract Sender {
         _;
     }
 
-    function sendData(IReceiver destination, bool bounce, bytes32 data, uint128 value) external onlyOwner {
+    function sendData(IReceiver destination, bool bounce, uint128 value, bytes32 data, uint256 destinationChainId) external onlyOwner {
         tvm.accept();
-        destination.receiveData{bounce:bounce, value:value}(data);
+        destination.receiveData{bounce:bounce, value:value}(data, destinationChainId);
     } 
 }

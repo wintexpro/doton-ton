@@ -7,8 +7,9 @@
 			"inputs": [
 				{"name":"destination","type":"address"},
 				{"name":"bounce","type":"bool"},
+				{"name":"value","type":"uint128"},
 				{"name":"data","type":"uint256"},
-				{"name":"value","type":"uint128"}
+				{"name":"destinationChainId","type":"uint256"}
 			],
 			"outputs": [
 			]
