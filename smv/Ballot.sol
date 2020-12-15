@@ -8,7 +8,7 @@ contract Ballot {
     bool isUsed = false;
     address usedFor = address(0);
 
-    function vote(uint8 choice, IProposal proposal) external {
+    function vote(uint8 choice, IProposal proposal) external { // TODO only owner BTW!
         require(choice == 0 || choice == 1);
         require(!isUsed);
         tvm.accept();
