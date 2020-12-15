@@ -51,15 +51,6 @@
 			],
 			"outputs": [
 			]
-		},
-		{
-			"name": "deployAccessCardWithPubkey",
-			"inputs": [
-				{"name":"pubkey","type":"uint256"}
-			],
-			"outputs": [
-				{"name":"deployedContract","type":"address"}
-			]
 		}
 	],
 	"data": [

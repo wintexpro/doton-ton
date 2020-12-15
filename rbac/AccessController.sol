@@ -64,12 +64,4 @@ contract AccessController {
         // require(oldSuperAdminAddress == _address, 104); не должен попасть в этот кейс, поскольку все входные данные собираются контрактом заведомо корректно
         superAdminAddress = newSuperAdminAddress;
     }
-
-    // создает хоть кто
-    function deployAccessCardWithPubkey(uint256 pubkey) public returns (address deployedContract) {
-        tvm.accept(); // TODO вероятно, убрать tvm.accept и требовать при вызове сообщения присылать value >= initialValue + комиссия
-		TvmCell stateInitWithKey = tvm.insertPubkey(accessCardInitState, pubkey);
-        address newAccessCard = new AccessCard{stateInit:stateInitWithKey, value:initialValue}(address(this), pubkey, superAdminAddress, accessCardInitState);
-		return newAccessCard;
-	}
 }
