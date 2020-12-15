@@ -28,7 +28,6 @@ contract VoteController {
 
     modifier onlyOwner {
         require (msg.pubkey() == publicKey);
-        tvm.accept();
         _;
     }
 
