@@ -4,26 +4,33 @@ import "./Proposal.sol";
 
 contract VoteController {
 
-    // Proposal struct 
-    struct ProposalInfo {
-        uint256 proposalPublicKey;
-        address proposalAddress;
-        uint256 votersAmount;
-    }
     // Controller basic state
     TvmCell proposalInitState;
     TvmCell ballotInitState;
     uint256 publicKey;
     uint128 deployInitialValue;
+    uint256 proposalPublicKey;
 
-    mapping (uint256 => ProposalInfo) proposals;
+    // Proposal state
+    uint256 proposalVotersAmount;
 
-    constructor (TvmCell _proposalInitState, TvmCell _ballotInitState, uint128 _deployInitialValue, uint256 _publicKey) public {
+    mapping (uint8 => mapping(uint256 => address)) proposals;
+
+    constructor (
+        TvmCell _proposalInitState,
+        TvmCell _ballotInitState,
+        uint128 _deployInitialValue,
+        uint256 _publicKey,
+        uint256 _proposalPublicKey,
+        uint256 _proposalVotersAmount
+    ) public {
         tvm.accept();
         proposalInitState = _proposalInitState;
         ballotInitState = _ballotInitState;
         deployInitialValue = _deployInitialValue;
         publicKey = _publicKey;
+        proposalPublicKey = _proposalPublicKey;
+        proposalVotersAmount = _proposalVotersAmount;
     }
 
     modifier onlyOwner {
@@ -32,18 +39,33 @@ contract VoteController {
     }
 
     // TODO not just a public
-    function createProposal(uint256 proposalPublicKey, uint256 proposalId, uint256 votersAmount) public returns (address proposalAddress) {
-        require (proposals[proposalId].proposalPublicKey == 0);
+    function createProposal(
+        uint8 chainId,
+        uint64 nonce,
+        bytes32 data,
+        uint8 initializerChoice,
+        address initializerAddress
+    ) public returns (address proposalAddress) {
+        require (proposals[chainId][nonce].value == 0);
         tvm.accept();
-        TvmCell proposalStateWithPublicKey = tvm.insertPubkey(proposalInitState, proposalPublicKey);
-        proposalAddress = new Proposal{stateInit: proposalStateWithPublicKey, value: deployInitialValue}(
+        proposalAddress = new Proposal {
+            code: proposalInitState, 
+            value: deployInitialValue,
+            pubkey: proposalPublicKey,
+            varInit: {
+                chainId: chainId,
+                nonce: nonce
+            }
+        } (
             ballotInitState,
             proposalPublicKey,
-            proposalId,
-            votersAmount,
-            address(this)
+            proposalVotersAmount,
+            address(this),
+            data,
+            initializerChoice,
+            initializerAddress  
         );
-        proposals[proposalId] = ProposalInfo(proposalPublicKey, proposalAddress, votersAmount);
+        proposals[chainId][nonce] = proposalAddress;
         return proposalAddress;
     }
 
@@ -61,8 +83,8 @@ contract VoteController {
         return ballotInitState;
     }
 
-    function getProposalInfoById(uint256 proposalId) public view returns (ProposalInfo proposal) {
-        proposal = proposals[proposalId];
+    function getProposalAddress(uint8 chainId, uint64 nonce) public view returns (address proposal) {
+        proposal = proposals[chainId][nonce];
     }
 
 

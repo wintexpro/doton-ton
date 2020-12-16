@@ -4,20 +4,33 @@ contract Proposal {
     TvmCell ballotInitState;
     uint256 publicKey;
     // Proposal info state
-    uint256 proposalId;
+    uint8 static public chainId;
+    uint64 static public nonce;
+    bytes32 proposalData;
     uint256 votersAmount;
     address voteControllerAddress;
 
     // Proposal voting state
     mapping (uint8 => uint256) votes;
+    mapping (address => uint8) addressVotes;
 
-    constructor (TvmCell _ballotInitState, uint256 _publicKey, uint256 _proposalId, uint256 _votersAmount, address _voteControllerAddress) public {
+    constructor (
+        TvmCell _ballotInitState,
+        uint256 _publicKey,
+        uint256 _votersAmount,
+        address _voteControllerAddress,
+        bytes32 _proposalData,
+        uint8 initializerChoice,
+        address initializerAddress
+    ) public {
         tvm.accept();
         ballotInitState = _ballotInitState;
         publicKey = _publicKey;
-        proposalId = _proposalId;
         votersAmount = _votersAmount;
         voteControllerAddress = _voteControllerAddress;
+        proposalData = _proposalData;
+        votes[initializerChoice]++;
+        addressVotes[initializerAddress] = initializerChoice;
     }
 
     modifier isValidBallot(uint8 choice, uint256 ballotPublicKey) {
@@ -38,11 +51,13 @@ contract Proposal {
 
     function vote(uint8 choice, uint256 ballotPublicKey) external isValidBallot(choice, ballotPublicKey) {
         votes[choice]++;
+        addressVotes[msg.sender] = choice;
     }
 
-    function voteByController(uint8 choice) external {
+    function voteByController(address voter, uint8 choice) external {
         require(msg.sender == voteControllerAddress);
         votes[choice]++;
+        addressVotes[voter] = choice;
     }
 
  

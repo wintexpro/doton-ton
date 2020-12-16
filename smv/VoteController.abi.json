@@ -8,7 +8,9 @@
 				{"name":"_proposalInitState","type":"cell"},
 				{"name":"_ballotInitState","type":"cell"},
 				{"name":"_deployInitialValue","type":"uint128"},
-				{"name":"_publicKey","type":"uint256"}
+				{"name":"_publicKey","type":"uint256"},
+				{"name":"_proposalPublicKey","type":"uint256"},
+				{"name":"_proposalVotersAmount","type":"uint256"}
 			],
 			"outputs": [
 			]
@@ -16,9 +18,11 @@
 		{
 			"name": "createProposal",
 			"inputs": [
-				{"name":"proposalPublicKey","type":"uint256"},
-				{"name":"proposalId","type":"uint256"},
-				{"name":"votersAmount","type":"uint256"}
+				{"name":"chainId","type":"uint8"},
+				{"name":"nonce","type":"uint64"},
+				{"name":"data","type":"uint256"},
+				{"name":"initializerChoice","type":"uint8"},
+				{"name":"initializerAddress","type":"address"}
 			],
 			"outputs": [
 				{"name":"proposalAddress","type":"address"}
@@ -50,12 +54,13 @@
 			]
 		},
 		{
-			"name": "getProposalInfoById",
+			"name": "getProposalAddress",
 			"inputs": [
-				{"name":"proposalId","type":"uint256"}
+				{"name":"chainId","type":"uint8"},
+				{"name":"nonce","type":"uint64"}
 			],
 			"outputs": [
-				{"components":[{"name":"proposalPublicKey","type":"uint256"},{"name":"proposalAddress","type":"address"},{"name":"votersAmount","type":"uint256"}],"name":"proposal","type":"tuple"}
+				{"name":"proposal","type":"address"}
 			]
 		}
 	],
