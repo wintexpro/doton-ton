@@ -40,7 +40,8 @@ contract VoteController {
             ballotInitState,
             proposalPublicKey,
             proposalId,
-            votersAmount
+            votersAmount,
+            address(this)
         );
         proposals[proposalId] = ProposalInfo(proposalPublicKey, proposalAddress, votersAmount);
         return proposalAddress;
