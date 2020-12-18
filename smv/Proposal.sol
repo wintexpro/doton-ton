@@ -1,7 +1,7 @@
 pragma solidity >= 0.6.0;
 
 interface IHandler {
-    function executeProposal(uint8 chainId, uint64 nonce, bytes32 messageType, bytes32 data) external;
+    function executeProposal(uint256 proposalPubKey, uint8 chainId, uint64 nonce, bytes32 messageType, bytes32 data) external;
 }
 
 contract Proposal {
@@ -40,7 +40,7 @@ contract Proposal {
     }
 
     modifier isValidBallot(uint8 choice, uint256 ballotPublicKey) {
-        require(choice == 0 || choice == 1);
+        require(choice == 0 || choice == 1); // TODO: value check?
         tvm.accept();
         TvmCell ballotInitStateWithPublicKey = tvm.insertPubkey(ballotInitState, ballotPublicKey);
         require (msg.sender.value == tvm.hash(ballotInitStateWithPublicKey));
@@ -65,7 +65,7 @@ contract Proposal {
         votes[choice]++;
         addressVotes[voter] = choice;
         if (votes[1] + votes[0] >= votersAmount) {
-            IHandler(handlerAddress).executeProposal{bounce:false, value:200000000}(chainId, nonce, messageType, proposalData);
+            IHandler(handlerAddress).executeProposal{bounce:false, value:200000000}(tvm.pubkey(), chainId, nonce, messageType, proposalData);
         }
     }
 
