@@ -5,7 +5,7 @@ import "./Proposal.sol";
 contract VoteController {
 
     // Controller basic state
-    TvmCell proposalInitState;
+    TvmCell proposalCode;
     TvmCell ballotInitState;
     uint256 publicKey;
     uint128 deployInitialValue;
@@ -17,7 +17,7 @@ contract VoteController {
     mapping (uint8 => mapping(uint256 => address)) proposals;
 
     constructor (
-        TvmCell _proposalInitState,
+        TvmCell _proposalCode,
         TvmCell _ballotInitState,
         uint128 _deployInitialValue,
         uint256 _publicKey,
@@ -25,7 +25,7 @@ contract VoteController {
         uint256 _proposalVotersAmount
     ) public {
         tvm.accept();
-        proposalInitState = _proposalInitState;
+        proposalCode = _proposalCode;
         ballotInitState = _ballotInitState;
         deployInitialValue = _deployInitialValue;
         publicKey = _publicKey;
@@ -49,7 +49,7 @@ contract VoteController {
         require (proposals[chainId][nonce].value == 0);
         tvm.accept();
         proposalAddress = new Proposal {
-            code: proposalInitState, 
+            code: proposalCode, 
             value: deployInitialValue,
             pubkey: proposalPublicKey,
             varInit: {

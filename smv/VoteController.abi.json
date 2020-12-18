@@ -5,7 +5,7 @@
 		{
 			"name": "constructor",
 			"inputs": [
-				{"name":"_proposalInitState","type":"cell"},
+				{"name":"_proposalCode","type":"cell"},
 				{"name":"_ballotInitState","type":"cell"},
 				{"name":"_deployInitialValue","type":"uint128"},
 				{"name":"_publicKey","type":"uint256"},
