@@ -5,7 +5,7 @@
 		{
 			"name": "constructor",
 			"inputs": [
-				{"name":"_proposalInitState","type":"cell"},
+				{"name":"_proposalCode","type":"cell"},
 				{"name":"_ballotInitState","type":"cell"},
 				{"name":"_deployInitialValue","type":"uint128"},
 				{"name":"_publicKey","type":"uint256"},
@@ -22,6 +22,8 @@
 				{"name":"voter","type":"address"},
 				{"name":"choice","type":"uint8"},
 				{"name":"chainId","type":"uint8"},
+				{"name":"messageType","type":"uint256"},
+				{"name":"handlerAddress","type":"address"},
 				{"name":"nonce","type":"uint64"},
 				{"name":"data","type":"uint256"}
 			],
