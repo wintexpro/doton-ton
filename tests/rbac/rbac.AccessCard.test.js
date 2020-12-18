@@ -13,6 +13,7 @@ const toHex = require('../helper').toHex
 
 const accessCardAbiPath = path.join(__dirname, '../../rbac/AccessCard.abi.json')
 const accessCardTvcPath = path.join(__dirname, '../../rbac/AccessCard.tvc')
+const wintexGiverKeysObject = JSON.parse(fs.readFileSync(path.join(__dirname, '../../CustomGiverForDevNet/WintexGiver.keys.json')))
 
 // roles in contract AccessCard
 const SUPERADMIN = '0x1'
@@ -48,15 +49,18 @@ describe('Asserts', function () {
   /**
    * Deploy AccessCard from AccessController
    */
-  async function deployAccessCardFromAccessController (contractName, assertThatDeployed = true, _manager = manager, keysForAccessController = undefined) {
+  async function deployAccessCardFromAccessController (contractName, assertThatDeployed = true, _manager = manager, deployLocallyAndUseLocalGiver = true) {
     const keyPair = await _manager.createKeysAndReturn()
-    const deployAccessCardRes = await _manager.contracts['AccessController'].runContract('deployAccessCardWithPubkey', {
-      pubkey: '0x' + keyPair.public
-    }, keysForAccessController || _manager.keys).catch(e => console.log('deployAccessCardWithPubkey:', e))
-    await deployCheck(deployAccessCardRes.deployedContract, _manager)
-    // await new Promise(resolve => setTimeout(resolve, 20000))
-    await _manager.addContractFromAddress(deployAccessCardRes.deployedContract, accessCardAbiPath, contractName, keyPair) // add contract to _manager
-    _manager.contracts[contractName].address = deployAccessCardRes.deployedContract
+    await _manager.loadContract(accessCardTvcPath, accessCardAbiPath, { contractName, keys: keyPair })
+    if (!deployLocallyAndUseLocalGiver) { // require grams from ours giver on net.ton.dev
+      await _manager.contracts['WintexGiver'].runContract('sendMeGramsPls', { dest: _manager.contracts[contractName].address, amount: 500000000 }, wintexGiverKeysObject)
+    }
+    await _manager.contracts[contractName].deployContract({
+      _accessControllerAddress: _manager.contracts['AccessController'].address,
+      _myPublicKey: '0x' + keyPair.public,
+      _myInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' })
+    }, deployLocallyAndUseLocalGiver)
+    await deployCheck(_manager.contracts[contractName].address, _manager)
     if (assertThatDeployed) {
       assert.deepStrictEqual(_manager.contracts[contractName].isDeployed, true)
     }
@@ -76,7 +80,6 @@ describe('Asserts', function () {
   it('Test: grantSuperAdmin - should forbid call by not contract with `accessControllerAddress`', async function () {
     // --- Deployment the first AccessCard ---
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1')
-
     // case 1: try to call himself
     let error
     await manager.contracts['AccessCard1'].runContract('grantSuperAdmin', {}, keysForAccessCard1).catch(e => { error = e })
@@ -299,7 +302,7 @@ describe('Asserts', function () {
     assert.deepStrictEqual(getRoleAfterGrantingRes.my_role, getRoleBeforeGrantingRes.my_role)
   })
 
-  it.only('Test (in net.ton.dev): grantRole + changeRole + onBounce - should not change target role if target role insuitable', async function () {
+  /* it.only('Test (in net.ton.dev): grantRole + changeRole + onBounce - should not change target role if target role insuitable', async function () {
     const devMgr = new Manager()
     await devMgr.createClient(['net.ton.dev'])
 
@@ -309,8 +312,6 @@ describe('Asserts', function () {
       path.join(__dirname, '../../CustomGiverForDevNet/WintexGiver.abi.json'),
       'WintexGiver'
     )
-    const wintexGiverKeysObject = JSON.parse(fs.readFileSync(path.join(__dirname, '../../CustomGiverForDevNet/WintexGiver.keys.json')))
-
     // Deployment the AccessController:
     const keysForAccessController = await devMgr.createKeysAndReturn()
     await devMgr.loadContract(
@@ -334,9 +335,9 @@ describe('Asserts', function () {
     await devMgr.loadContract(accessCardTvcPath, accessCardAbiPath, { contractName: 'AccessCard1' })
     await devMgr.loadContract(accessCardTvcPath, accessCardAbiPath, { contractName: 'AccessCard2' })
     await devMgr.loadContract(accessCardTvcPath, accessCardAbiPath, { contractName: 'AccessCard3' })
-    const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1', true, devMgr, keysForAccessController)
-    const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2', true, devMgr, keysForAccessController)
-    await deployAccessCardFromAccessController('AccessCard3', true, devMgr, keysForAccessController)
+    const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1', true, devMgr, false)
+    const keysForAccessCard2 = await deployAccessCardFromAccessController('AccessCard2', true, devMgr, false)
+    await deployAccessCardFromAccessController('AccessCard3', true, devMgr, false)
     console.log('AccessCard1:', devMgr.contracts['AccessCard1'].address)
     console.log('AccessCard2:', devMgr.contracts['AccessCard2'].address)
     console.log('AccessCard3:', devMgr.contracts['AccessCard3'].address)
@@ -407,7 +408,7 @@ describe('Asserts', function () {
     // check that second AccessCard role has not been changed
     const accessCard2RoleAfterCase2Res = await devMgr.contracts['AccessCard2'].runLocal('getRole', {})
     assert.deepStrictEqual(accessCard2RoleAfterCase2Res.output.my_role, accessCard2RoleRes.output.my_role)
-  })
+  }) */
 
   it('Test: grantRole (+ getRole, + onBounce) - should not change target role if you can not grant this role because target role insuitable', async function () {
     const keysForAccessCard1 = await deployAccessCardFromAccessController('AccessCard1')
@@ -509,7 +510,7 @@ describe('Asserts', function () {
 
   it('Test: updateValueForChangeRole - should update value', async function () {
     await deployAccessCardFromAccessController('AccessCard1')
-    const newValue = toHex(123456789)
+    const newValue = toHex(String(123456789))
     await manager.contracts['AccessCard1'].runContract('updateValueForChangeRole', { newValue })
 
     const getValueForChangeRoleRes = await manager.contracts['AccessCard1'].runLocal('getValueForChangeRole', {})
@@ -523,7 +524,7 @@ describe('Asserts', function () {
     // check that can not update initial value by not owner
     let error
     await manager.contracts['AccessCard1'].runContract(
-      'updateValueForChangeRole', { newValue: toHex(123456789) }, null
+      'updateValueForChangeRole', { newValue: toHex(String(123456789)) }, null
     ).catch(e => { error = e })
     assert.ok((error.data.exit_code === 108) || (error.data.tip === 'Check sign keys'))
 
@@ -534,7 +535,7 @@ describe('Asserts', function () {
 
   it('Test: updateValueForChangeSuperAdmin - should update value', async function () {
     await deployAccessCardFromAccessController('AccessCard1')
-    const newValue = toHex(123456789)
+    const newValue = toHex(String(123456789))
     await manager.contracts['AccessCard1'].runContract('updateValueForChangeSuperAdmin', { newValue })
 
     const getValueForChangeRoleRes = await manager.contracts['AccessCard1'].runLocal('getValueForChangeSuperAdmin', {})
@@ -548,7 +549,7 @@ describe('Asserts', function () {
     // check that can not update initial value by not owner
     let error
     await manager.contracts['AccessCard1'].runContract(
-      'updateValueForChangeSuperAdmin', { newValue: toHex(123456789) }, null
+      'updateValueForChangeSuperAdmin', { newValue: toHex(String(123456789)) }, null
     ).catch(e => { error = e })
     assert.ok((error.data.exit_code === 108) || (error.data.tip === 'Check sign keys'))
 

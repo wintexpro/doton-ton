@@ -10,6 +10,9 @@ const fs = require('fs')
 const path = require('path')
 const runLocal = require('../helper').runLocal
 
+const accessControllerAbiPath = path.join(__dirname, '../../rbac/AccessController.abi.json')
+const accessControllerTvcPath = path.join(__dirname, '../../rbac/AccessController.tvc')
+
 const accessCardAbiPath = path.join(__dirname, '../../rbac/AccessCard.abi.json')
 const accessCardTvcPath = path.join(__dirname, '../../rbac/AccessCard.tvc')
 
@@ -25,8 +28,8 @@ describe('RBAC: AccessController', function () {
     manager = new Manager()
     await manager.createClient(['http://localhost:80/graphql'])
     await manager.loadContract(
-      path.join(__dirname, '../../rbac/AccessController.tvc'),
-      path.join(__dirname, '../../rbac/AccessController.abi.json')
+      accessControllerTvcPath,
+      accessControllerAbiPath
     )
     await manager.loadContract(
       accessCardTvcPath,
@@ -104,11 +107,14 @@ describe('RBAC: AccessController', function () {
       _accessCardInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' }),
       _initialValue: 1000000
     })
+    // deploy access card
     const keysForAccessCard1 = await manager.createKeysAndReturn()
-    const deployAccessCardRes = await manager.contracts['AccessController'].runContract('deployAccessCardWithPubkey', {
-      pubkey: '0x' + keysForAccessCard1.public
+    await manager.loadContract(accessCardTvcPath, accessCardAbiPath, { contractName: 'AccessCard1', keys: keysForAccessCard1 })
+    await manager.contracts['AccessCard1'].deployContract({
+      _accessControllerAddress: manager.contracts['AccessController'].address,
+      _myPublicKey: '0x' + keysForAccessCard1.public,
+      _myInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' })
     })
-    await manager.addContractFromAddress(deployAccessCardRes.deployedContract, accessCardAbiPath, 'AccessCard1')
     assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true)
   })
 
@@ -117,11 +123,18 @@ describe('RBAC: AccessController', function () {
       _accessCardInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' }),
       _initialValue: 1000000
     })
+    // deploy access card
     const keysForAccessCard1 = await manager.createKeysAndReturn()
-    const deployAccessCardRes = await manager.contracts['AccessController'].runContract('deployAccessCardWithPubkey', {
-      pubkey: '0x' + keysForAccessCard1.public
+    await manager.loadContract(
+      accessCardTvcPath,
+      accessCardAbiPath,
+      { contractName: 'AccessCard1', keys: keysForAccessCard1 }
+    )
+    await manager.contracts['AccessCard1'].deployContract({
+      _accessControllerAddress: manager.contracts['AccessController'].address,
+      _myPublicKey: '0x' + keysForAccessCard1.public,
+      _myInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' })
     })
-    await manager.addContractFromAddress(deployAccessCardRes.deployedContract, accessCardAbiPath, 'AccessCard1')
     assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true)
 
     // check superAdminAddress before granting
@@ -141,12 +154,14 @@ describe('RBAC: AccessController', function () {
       _accessCardInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' }),
       _initialValue: 1000000
     })
-    // deploy first AccessCard
+    // deploy access card
     const keysForAccessCard1 = await manager.createKeysAndReturn()
-    const deployAccessCardRes = await manager.contracts['AccessController'].runContract('deployAccessCardWithPubkey', {
-      pubkey: '0x' + keysForAccessCard1.public
+    await manager.loadContract(accessCardTvcPath, accessCardAbiPath, { contractName: 'AccessCard1', keys: keysForAccessCard1 })
+    await manager.contracts['AccessCard1'].deployContract({
+      _accessControllerAddress: manager.contracts['AccessController'].address,
+      _myPublicKey: '0x' + keysForAccessCard1.public,
+      _myInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' })
     })
-    await manager.addContractFromAddress(deployAccessCardRes.deployedContract, accessCardAbiPath, 'AccessCard1')
     assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true)
 
     // try call by another contract (with another keys)
@@ -164,10 +179,12 @@ describe('RBAC: AccessController', function () {
     })
     // deploy first AccessCard
     const keysForAccessCard1 = await manager.createKeysAndReturn()
-    const deployAccessCardRes = await manager.contracts['AccessController'].runContract('deployAccessCardWithPubkey', {
-      pubkey: '0x' + keysForAccessCard1.public
+    await manager.loadContract(accessCardTvcPath, accessCardAbiPath, { contractName: 'AccessCard1', keys: keysForAccessCard1 })
+    await manager.contracts['AccessCard1'].deployContract({
+      _accessControllerAddress: manager.contracts['AccessController'].address,
+      _myPublicKey: '0x' + keysForAccessCard1.public,
+      _myInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' })
     })
-    await manager.addContractFromAddress(deployAccessCardRes.deployedContract, accessCardAbiPath, 'AccessCard1')
     assert.deepStrictEqual(manager.contracts['AccessCard1'].isDeployed, true)
 
     // --- Grant first superadmin ---
@@ -184,10 +201,12 @@ describe('RBAC: AccessController', function () {
 
     // deploy second AccessCard
     const keysForAccessCard2 = await manager.createKeysAndReturn()
-    const deployAccessCard2Res = await manager.contracts['AccessController'].runContract('deployAccessCardWithPubkey', {
-      pubkey: '0x' + keysForAccessCard2.public
+    await manager.loadContract(accessCardTvcPath, accessCardAbiPath, { contractName: 'AccessCard2', keys: keysForAccessCard2 })
+    await manager.contracts['AccessCard2'].deployContract({
+      _accessControllerAddress: manager.contracts['AccessController'].address,
+      _myPublicKey: '0x' + keysForAccessCard1.public,
+      _myInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' })
     })
-    await manager.addContractFromAddress(deployAccessCard2Res.deployedContract, accessCardAbiPath, 'AccessCard2')
     assert.deepStrictEqual(manager.contracts['AccessCard2'].isDeployed, true)
 
     // Try to grant superadmin again
