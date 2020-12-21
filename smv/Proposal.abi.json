@@ -45,7 +45,9 @@
 			"name": "voteByController",
 			"inputs": [
 				{"name":"voter","type":"address"},
-				{"name":"choice","type":"uint8"}
+				{"name":"choice","type":"uint8"},
+				{"name":"messageType","type":"uint256"},
+				{"name":"handlerAddress","type":"address"}
 			],
 			"outputs": [
 			]
