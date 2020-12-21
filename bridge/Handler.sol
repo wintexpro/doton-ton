@@ -18,7 +18,7 @@ contract Handler {
                 chainId: chainId,
                 nonce: nonce
             }
-        } (tvm.buildEmptyData(proposalPubKey), proposalPubKey, 0, address(0), 0, 0, address(0));
+        } (tvm.buildEmptyData(proposalPubKey), proposalPubKey, 0, 0, 0, address(0));
         require (msg.sender == validCallingAddress, 101);
         _;
     }

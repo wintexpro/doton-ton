@@ -8,7 +8,6 @@
 				{"name":"_ballotInitState","type":"cell"},
 				{"name":"_publicKey","type":"uint256"},
 				{"name":"_votersAmount","type":"uint256"},
-				{"name":"_voteControllerAddress","type":"address"},
 				{"name":"_proposalData","type":"uint256"},
 				{"name":"initializerChoice","type":"uint8"},
 				{"name":"initializerAddress","type":"address"}
@@ -55,7 +54,8 @@
 	],
 	"data": [
 		{"key":1,"name":"chainId","type":"uint8"},
-		{"key":2,"name":"nonce","type":"uint64"}
+		{"key":2,"name":"nonce","type":"uint64"},
+		{"key":3,"name":"voteControllerAddress","type":"address"}
 	],
 	"events": [
 	]

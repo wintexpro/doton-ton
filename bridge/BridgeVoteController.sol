@@ -34,7 +34,7 @@ contract BridgeVoteController is VoteController {
         require(choice == 0 || choice == 1);
         tvm.accept();
         if (proposals[chainId][nonce].value > 0) {
-            IProposal(proposals[chainId][nonce]).voteByController{bounce:true, value:200000000}(voter, choice, messageType, handlerAddress);
+            IProposal(proposals[chainId][nonce]).voteByController{bounce:true, value:300000000}(voter, choice, messageType, handlerAddress);
         } else {
             createProposal(chainId, nonce, data, choice, voter);
         }

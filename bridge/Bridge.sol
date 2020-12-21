@@ -31,6 +31,6 @@ contract Bridge {
     function relayerVoteForProposal(uint8 choice, uint8 chainId, bytes32 messageType, uint64 nonce, bytes32 data, uint256 relayerPubKey) isValidRelayer(relayerPubKey) external {
         require(msg.value >= 400000000); // TODO ???
         require(handlers[messageType] != address(0));
-        IBridgeVoteController(voteControllerAddress).voteByBridge{bounce:true, value:200000000}(msg.sender, choice, chainId, messageType, handlers[messageType], nonce, data);
+        IBridgeVoteController(voteControllerAddress).voteByBridge{bounce:true, value:350000000}(msg.sender, choice, chainId, messageType, handlers[messageType], nonce, data);
     }
 }

@@ -10,10 +10,10 @@ contract Proposal {
     // Proposal info state
     uint8 static public chainId;
     uint64 static public nonce;
+    address static public voteControllerAddress;
     bytes32 proposalData;
-    uint256 votersAmount; 
-    address voteControllerAddress;
-
+    uint256 votersAmount;
+    
     // Proposal voting state
     mapping (uint8 => uint256) votes;
     mapping (address => uint8) addressVotes;
@@ -22,7 +22,6 @@ contract Proposal {
         TvmCell _ballotInitState,
         uint256 _publicKey,
         uint256 _votersAmount,
-        address _voteControllerAddress,
         bytes32 _proposalData,
         uint8 initializerChoice,
         address initializerAddress
@@ -33,7 +32,6 @@ contract Proposal {
         ballotInitState = _ballotInitState;
         publicKey = _publicKey;
         votersAmount = _votersAmount;
-        voteControllerAddress = _voteControllerAddress;
         proposalData = _proposalData;
         votes[initializerChoice]++;
         addressVotes[initializerAddress] = initializerChoice;

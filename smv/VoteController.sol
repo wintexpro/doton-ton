@@ -54,13 +54,13 @@ contract VoteController {
             pubkey: proposalPublicKey,
             varInit: {
                 chainId: chainId,
-                nonce: nonce
+                nonce: nonce,
+                voteControllerAddress: address(this)
             }
         } (
             ballotInitState,
             proposalPublicKey,
             proposalVotersAmount,
-            address(this),
             data,
             initializerChoice,
             initializerAddress  
