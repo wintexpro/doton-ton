@@ -11,7 +11,6 @@ interface IAccessCard {
 
 contract AccessCard {
     address accessControllerAddress;
-    address superAdminAddress;
     uint256 myPublicKey;
     TvmCell myInitState;
 
@@ -50,10 +49,9 @@ contract AccessCard {
     }
 
 
-    constructor(address _accessControllerAddress, uint256 _myPublicKey, address _superAdminAddress, TvmCell _myInitState) public {
+    constructor(address _accessControllerAddress, uint256 _myPublicKey, TvmCell _myInitState) public {
         tvm.accept();
         accessControllerAddress = _accessControllerAddress;
-        superAdminAddress = _superAdminAddress;
         myPublicKey = _myPublicKey;
         myInitState = _myInitState;
         myRole = USER;

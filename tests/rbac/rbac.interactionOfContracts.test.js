@@ -51,10 +51,12 @@ describe('Asserts', function () {
    */
   async function deployAccessCardFromAccessController (contractName, assertThatDeployed = true) {
     const keyPair = await manager.createKeysAndReturn()
-    const deployAccessCardRes = await manager.contracts['AccessController'].runContract('deployAccessCardWithPubkey', {
-      pubkey: '0x' + keyPair.public
+    await manager.loadContract(accessCardTvcPath, accessCardAbiPath, { contractName, keys: keyPair })
+    await manager.contracts[contractName].deployContract({
+      _accessControllerAddress: manager.contracts['AccessController'].address,
+      _myPublicKey: '0x' + keyPair.public,
+      _myInitState: fs.readFileSync(accessCardTvcPath, { encoding: 'base64' })
     })
-    await manager.addContractFromAddress(deployAccessCardRes.deployedContract, accessCardAbiPath, contractName) // add contract to manager
     if (assertThatDeployed) {
       assert.deepStrictEqual(manager.contracts[contractName].isDeployed, true)
     }
