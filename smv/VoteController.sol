@@ -51,7 +51,7 @@ contract VoteController {
         proposalAddress = new Proposal {
             code: proposalCode, 
             value: deployInitialValue,
-            pubkey: proposalPublicKey,
+            pubkey: tvm.pubkey(),
             varInit: {
                 chainId: chainId,
                 nonce: nonce,

@@ -80,7 +80,9 @@ describe('Bridge. Some full and direct.', function () {
       { contractName: 'h', keys: handlerKeys }
     )
     await manager.contracts.h.deployContract({
-      _proposalCode: (await manager.client.contracts.getCodeFromImage({ imageBase64: manager.contracts.Proposal.contractPackage.imageBase64 })).codeBase64
+      _proposalCode: (await manager.client.contracts.getCodeFromImage({ imageBase64: manager.contracts.Proposal.contractPackage.imageBase64 })).codeBase64,
+      _bridgeVoteControllerAddress: manager.contracts.bvc.address,
+      _bridgeVoteControllerPubKey: '0x' + bridgeVoteControllerKeys.public
     })
     // deploy relayers
     await manager.contracts.r1.deployContract({

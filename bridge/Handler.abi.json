@@ -5,7 +5,9 @@
 		{
 			"name": "constructor",
 			"inputs": [
-				{"name":"_proposalCode","type":"cell"}
+				{"name":"_proposalCode","type":"cell"},
+				{"name":"_bridgeVoteControllerAddress","type":"address"},
+				{"name":"_bridgeVoteControllerPubKey","type":"uint256"}
 			],
 			"outputs": [
 			]

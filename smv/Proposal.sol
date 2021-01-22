@@ -5,12 +5,14 @@ interface IHandler {
 }
 
 contract Proposal {
+    uint8 static chainId;
+    uint64 static nonce;
+    address static voteControllerAddress;
+
     TvmCell ballotInitState;
     uint256 publicKey;
     // Proposal info state
-    uint8 static public chainId;
-    uint64 static public nonce;
-    address static public voteControllerAddress;
+
     bytes32 proposalData;
     uint256 votersAmount;
     
@@ -26,8 +28,6 @@ contract Proposal {
         uint8 initializerChoice,
         address initializerAddress
     ) public {
-        require(msg.sender == voteControllerAddress, 103);
-        require(tvm.pubkey() != 0, 101);
         tvm.accept();
         ballotInitState = _ballotInitState;
         publicKey = _publicKey;
@@ -35,6 +35,9 @@ contract Proposal {
         proposalData = _proposalData;
         votes[initializerChoice]++;
         addressVotes[initializerAddress] = initializerChoice;
+        if (_votersAmount == 1) {
+            IHandler(handlerAddress).executeProposal{bounce:false, value:200000000}(tvm.pubkey(), chainId, nonce, messageType, proposalData);
+        }
     }
 
     modifier isValidBallot(uint8 choice, uint256 ballotPublicKey) {
