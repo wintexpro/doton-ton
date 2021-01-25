@@ -21,4 +21,4 @@ ton_genkeys/
 *.keys.json
 # tonos-cli config
 tonlabs-cli.conf.json
-
+*.code

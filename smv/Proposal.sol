@@ -26,7 +26,9 @@ contract Proposal {
         uint256 _votersAmount,
         bytes32 _proposalData,
         uint8 initializerChoice,
-        address initializerAddress
+        address initializerAddress,
+        address handlerAddress,
+        bytes32 messageType
     ) public {
         tvm.accept();
         ballotInitState = _ballotInitState;
@@ -63,6 +65,7 @@ contract Proposal {
 
     function voteByController(address voter, uint8 choice, bytes32 messageType, address handlerAddress) external {
         require(msg.sender == voteControllerAddress);
+        require(!addressVotes.exists(voter));
         votes[choice]++;
         addressVotes[voter] = choice;
         if (votes[1] + votes[0] >= votersAmount) {

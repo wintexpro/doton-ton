@@ -22,7 +22,9 @@
 				{"name":"nonce","type":"uint64"},
 				{"name":"data","type":"uint256"},
 				{"name":"initializerChoice","type":"uint8"},
-				{"name":"initializerAddress","type":"address"}
+				{"name":"initializerAddress","type":"address"},
+				{"name":"handlerAddress","type":"address"},
+				{"name":"messageType","type":"uint256"}
 			],
 			"outputs": [
 				{"name":"proposalAddress","type":"address"}
