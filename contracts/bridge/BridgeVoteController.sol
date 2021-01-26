@@ -1,6 +1,6 @@
 pragma solidity >= 0.6.0;
 
-import "../smv/VoteController.sol";
+import "../voting/VoteController.sol";
 
 interface IProposal {
     function voteByController(address voter, uint8 choice, bytes32 messageType, address handlerAddress) external;
@@ -12,7 +12,6 @@ contract BridgeVoteController is VoteController {
 
     constructor (
         TvmCell _proposalCode,
-        TvmCell _ballotInitState,
         uint128 _deployInitialValue,
         uint256 _publicKey,
         uint256 _proposalPublicKey,
@@ -20,7 +19,6 @@ contract BridgeVoteController is VoteController {
         address _bridgeAddress
     ) VoteController (
         _proposalCode,
-        _ballotInitState,
         _deployInitialValue,
         _publicKey,
         _proposalPublicKey,

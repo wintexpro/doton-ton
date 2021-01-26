@@ -1,6 +1,6 @@
 pragma solidity >= 0.6.0;
 
-import "../smv/Proposal.sol";
+import "../voting/Proposal.sol";
 
 contract Handler {
     TvmCell proposalCode;

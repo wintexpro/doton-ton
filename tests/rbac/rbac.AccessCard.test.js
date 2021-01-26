@@ -11,9 +11,9 @@ const path = require('path')
 const runLocal = require('../helper').runLocal
 const toHex = require('../helper').toHex
 
-const accessCardAbiPath = path.join(__dirname, '../../rbac/AccessCard.abi.json')
-const accessCardTvcPath = path.join(__dirname, '../../rbac/AccessCard.tvc')
-const wintexGiverKeysObject = JSON.parse(fs.readFileSync(path.join(__dirname, '../../CustomGiverForDevNet/WintexGiver.keys.json')))
+const accessCardAbiPath = path.join(__dirname, '../../contracts/rbac/AccessCard.abi.json')
+const accessCardTvcPath = path.join(__dirname, '../../contracts/rbac/AccessCard.tvc')
+const wintexGiverKeysObject = JSON.parse(fs.readFileSync(path.join(__dirname, '../../contracts/CustomGiverForDevNet/WintexGiver.keys.json')))
 
 // roles in contract AccessCard
 const SUPERADMIN = '0x1'
@@ -33,8 +33,8 @@ describe('Asserts', function () {
     manager = new Manager()
     await manager.createClient(['http://localhost:80/graphql'])
     await manager.loadContract(
-      path.join(__dirname, '../../rbac/AccessController.tvc'),
-      path.join(__dirname, '../../rbac/AccessController.abi.json')
+      path.join(__dirname, '../../contracts/rbac/AccessController.tvc'),
+      path.join(__dirname, '../../contracts/rbac/AccessController.abi.json')
     )
     await manager.loadContract(
       accessCardTvcPath,
@@ -89,8 +89,8 @@ describe('Asserts', function () {
     // --- Deployment the another AccessController ---
     const keysForAccessController2 = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../rbac/AccessController.tvc'),
-      path.join(__dirname, '../../rbac/AccessController.abi.json'),
+      path.join(__dirname, '../../contracts/rbac/AccessController.tvc'),
+      path.join(__dirname, '../../contracts/rbac/AccessController.abi.json'),
       { contractName: 'AccessController2', keys: keysForAccessController2 }
     )
     await manager.contracts['AccessController2'].deployContract({
@@ -309,14 +309,14 @@ describe('Asserts', function () {
     // import giver
     await devMgr.addContractFromAddress(
       '0:440c99337a4009fec7ad4895a08587f05ab98b9d5c341dfb2211d1c862f1ae78',
-      path.join(__dirname, '../../CustomGiverForDevNet/WintexGiver.abi.json'),
+      path.join(__dirname, '../../contracts/CustomGiverForDevNet/WintexGiver.abi.json'),
       'WintexGiver'
     )
     // Deployment the AccessController:
     const keysForAccessController = await devMgr.createKeysAndReturn()
     await devMgr.loadContract(
-      path.join(__dirname, '../../rbac/AccessController.tvc'),
-      path.join(__dirname, '../../rbac/AccessController.abi.json'),
+      path.join(__dirname, '../../contracts/rbac/AccessController.tvc'),
+      path.join(__dirname, '../../contracts/rbac/AccessController.abi.json'),
       { keys: keysForAccessController }
     )
     // send grams to future AccessController address

@@ -6,7 +6,6 @@ contract VoteController {
 
     // Controller basic state
     TvmCell proposalCode;
-    TvmCell ballotInitState;
     uint256 publicKey;
     uint128 deployInitialValue;
     uint256 proposalPublicKey;
@@ -16,7 +15,6 @@ contract VoteController {
 
     constructor (
         TvmCell _proposalCode,
-        TvmCell _ballotInitState,
         uint128 _deployInitialValue,
         uint256 _publicKey,
         uint256 _proposalPublicKey,
@@ -24,7 +22,6 @@ contract VoteController {
     ) public {
         tvm.accept();
         proposalCode = _proposalCode;
-        ballotInitState = _ballotInitState;
         deployInitialValue = _deployInitialValue;
         publicKey = _publicKey;
         proposalPublicKey = _proposalPublicKey;
@@ -56,7 +53,6 @@ contract VoteController {
                 voteControllerAddress: address(this)
             }
         } (
-            ballotInitState,
             proposalPublicKey,
             proposalVotersAmount,
             data,
@@ -76,10 +72,6 @@ contract VoteController {
         tvm.accept();
         deployInitialValue = _deployInitialValue;
         return deployInitialValue;
-    }
-
-    function getBallotCode() public view returns (TvmCell ballotCode) {
-        return ballotInitState;
     }
 
     function getProposalAddress(uint8 chainId, uint64 nonce) public view returns (address proposal) {

@@ -5,7 +5,6 @@
 		{
 			"name": "constructor",
 			"inputs": [
-				{"name":"_ballotInitState","type":"cell"},
 				{"name":"_publicKey","type":"uint256"},
 				{"name":"_votersAmount","type":"uint256"},
 				{"name":"_proposalData","type":"uint256"},
@@ -31,15 +30,6 @@
 			],
 			"outputs": [
 				{"name":"noVotes","type":"uint256"}
-			]
-		},
-		{
-			"name": "vote",
-			"inputs": [
-				{"name":"choice","type":"uint8"},
-				{"name":"ballotPublicKey","type":"uint256"}
-			],
-			"outputs": [
 			]
 		},
 		{

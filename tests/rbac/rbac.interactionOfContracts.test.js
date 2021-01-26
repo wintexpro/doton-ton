@@ -10,8 +10,8 @@ const fs = require('fs')
 const path = require('path')
 const runLocal = require('../helper').runLocal
 
-const accessCardAbiPath = path.join(__dirname, '../../rbac/AccessCard.abi.json')
-const accessCardTvcPath = path.join(__dirname, '../../rbac/AccessCard.tvc')
+const accessCardAbiPath = path.join(__dirname, '../../contracts/rbac/AccessCard.abi.json')
+const accessCardTvcPath = path.join(__dirname, '../../contracts/rbac/AccessCard.tvc')
 
 // roles in contract AccessCard
 /* eslint-disable no-unused-vars */
@@ -33,8 +33,8 @@ describe('Asserts', function () {
     manager = new Manager()
     await manager.createClient(['http://localhost:80/graphql'])
     await manager.loadContract(
-      path.join(__dirname, '../../rbac/AccessController.tvc'),
-      path.join(__dirname, '../../rbac/AccessController.abi.json')
+      path.join(__dirname, '../../contracts/rbac/AccessController.tvc'),
+      path.join(__dirname, '../../contracts/rbac/AccessController.abi.json')
     )
     await manager.loadContract(
       accessCardTvcPath,
