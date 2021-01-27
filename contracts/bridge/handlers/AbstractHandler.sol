@@ -1,13 +1,11 @@
 pragma solidity >= 0.6.0;
 
-import "../voting/Proposal.sol";
+import "../../voting/Proposal.sol";
 
-contract Handler {
+contract AbstractHandler {
     TvmCell proposalCode;
     address bridgeVoteControllerAddress;
     uint256 bridgeVoteControllerPubKey;
-
-    event ProposalExecuted(uint8 chainId, uint64 nonce, bytes32 messageType, TvmCell data);
 
     modifier isValidProposal(uint256 proposalPubKey, uint8 chainId, uint64 nonce, TvmCell data) {
         TvmCell proposalStateInit = tvm.buildStateInit({
@@ -32,7 +30,7 @@ contract Handler {
         bridgeVoteControllerPubKey = _bridgeVoteControllerPubKey;
     }
 
-    function executeProposal(uint256 proposalPubKey, uint8 chainId, uint64 nonce, bytes32 messageType, TvmCell data) isValidProposal(proposalPubKey, chainId, nonce, data) external view {
-        emit ProposalExecuted(chainId, nonce, messageType, data);
+    function executeProposal(uint256 proposalPubKey, uint8 chainId, uint64 nonce, bytes32 messageType, TvmCell data) isValidProposal(proposalPubKey, chainId, nonce, data) external view virtual {
+        // should be overrided
     }
 }

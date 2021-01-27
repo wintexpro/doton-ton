@@ -74,8 +74,8 @@ describe('Bridge. Some full and direct.', function () {
     // load and deploy handler
     const handlerKeys = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../build/Handler.tvc'),
-      path.join(__dirname, '../../build/Handler.abi.json'),
+      path.join(__dirname, '../../build/MessageHandler.tvc'),
+      path.join(__dirname, '../../build/MessageHandler.abi.json'),
       { contractName: 'h', keys: handlerKeys }
     )
     await manager.contracts.h.deployContract({

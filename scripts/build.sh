@@ -1,5 +1,6 @@
 #!/bin/bash
 source ./scripts/local_variables.sh
+root=$(pwd)
 # Structure
 rm -rf ./build/*
 # components
@@ -16,9 +17,9 @@ AccessControllerLinkCommand=`tvm_linker compile AccessController.code --abi-json
 AccessControllerLinkName=`echo $AccessControllerLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
 mv $AccessControllerLinkName AccessController.tvc
 rm *.code
-mv *.tvc ./../../build
-mv *.abi.json ./../../build
-cd ./../../
+mv *.tvc "$root/build"
+mv *.abi.json "$root/build"
+cd "$root"
 
 
 # bridge
@@ -33,21 +34,27 @@ $solcExec BridgeVoteController.sol
 BridgeVoteControllerLinkCommand=`tvm_linker compile BridgeVoteController.code --abi-json BridgeVoteController.abi.json`
 BridgeVoteControllerLinkName=`echo $BridgeVoteControllerLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
 mv $BridgeVoteControllerLinkName BridgeVoteController.tvc
-## Handler
-$solcExec Handler.sol
-HandlerLinkCommand=`tvm_linker compile Handler.code --abi-json Handler.abi.json`
-HandlerLinkName=`echo $HandlerLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
-mv $HandlerLinkName Handler.tvc
 ## Relayer
 $solcExec Relayer.sol
 RelayerLinkCommand=`tvm_linker compile Relayer.code --abi-json Relayer.abi.json`
 RelayerLinkName=`echo $RelayerLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
 mv $RelayerLinkName Relayer.tvc
 rm *.code
-mv *.tvc ./../../build
-mv *.abi.json ./../../build
-cd ./../../
+mv *.tvc "$root/build"
+mv *.abi.json "$root/build"
+cd "$root"
 
+# handlers
+cd ./contracts/bridge/handlers
+## Handler
+$solcExec MessageHandler.sol
+MessageHandlerLinkCommand=`tvm_linker compile MessageHandler.code --abi-json MessageHandler.abi.json`
+MessageHandlerLinkName=`echo $MessageHandlerLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
+mv $MessageHandlerLinkName MessageHandler.tvc
+rm *.code
+mv *.tvc "$root/build"
+mv *.abi.json "$root/build"
+cd "$root"
 
 # transmitter
 cd ./contracts/transmitter
@@ -62,9 +69,9 @@ SenderLinkCommand=`tvm_linker compile Sender.code --abi-json Sender.abi.json`
 SenderLinkName=`echo $SenderLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
 mv $SenderLinkName Sender.tvc
 rm *.code
-mv *.tvc ./../../build
-mv *.abi.json ./../../build
-cd ./../../
+mv *.tvc "$root/build"
+mv *.abi.json "$root/build"
+cd "$root"
 
 # voting
 cd ./contracts/voting
@@ -79,6 +86,6 @@ VoteControllerLinkCommand=`tvm_linker compile VoteController.code --abi-json Vot
 VoteControllerLinkName=`echo $VoteControllerLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
 mv $VoteControllerLinkName VoteController.tvc
 rm *.code
-mv *.tvc ./../../build
-mv *.abi.json ./../../build
-cd ./../../
+mv *.tvc "$root/build"
+mv *.abi.json "$root/build"
+cd "$root"
