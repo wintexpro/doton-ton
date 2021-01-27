@@ -36,7 +36,7 @@ contract VoteController {
     function createProposal(
         uint8 chainId,
         uint64 nonce,
-        bytes32 data,
+        TvmCell data,
         uint8 initializerChoice,
         address initializerAddress,
         address handlerAddress,
@@ -50,12 +50,12 @@ contract VoteController {
             varInit: {
                 chainId: chainId,
                 nonce: nonce,
-                voteControllerAddress: address(this)
+                voteControllerAddress: address(this),
+                data: data
             }
         } (
             proposalPublicKey,
             proposalVotersAmount,
-            data,
             initializerChoice,
             initializerAddress,
             handlerAddress,
@@ -74,7 +74,7 @@ contract VoteController {
         return deployInitialValue;
     }
 
-    function getProposalAddress(uint8 chainId, uint64 nonce) public view returns (address proposal) {
+    function getProposalAddress(uint8 chainId, uint64 nonce, TvmCell data) public view returns (address proposal) {
         TvmCell proposalStateInit = tvm.buildStateInit({
             code: proposalCode,
             pubkey: tvm.pubkey(),
@@ -82,7 +82,8 @@ contract VoteController {
             varInit: {
                 chainId: chainId,
                 nonce: nonce,
-                voteControllerAddress: address(this)
+                voteControllerAddress: address(this),
+                data: data
             }
         });
         return address(tvm.hash(proposalStateInit));

@@ -16,32 +16,32 @@ describe('Bridge. Some full and direct.', function () {
     // load proposal only for getting CODE for deploy another components
     const proposalKeys = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../contracts/voting/Proposal.tvc'),
-      path.join(__dirname, '../../contracts/voting/Proposal.abi.json')
+      path.join(__dirname, '../../build/Proposal.tvc'),
+      path.join(__dirname, '../../build/Proposal.abi.json')
     )
     // load and deploy access controller
     const accessControllerKeys = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../contracts/rbac/AccessController.tvc'),
-      path.join(__dirname, '../../contracts/rbac/AccessController.abi.json'),
+      path.join(__dirname, '../../build/AccessController.tvc'),
+      path.join(__dirname, '../../build/AccessController.abi.json'),
       { contractName: 'ac', keys: accessControllerKeys }
     )
     await manager.contracts.ac.deployContract({
-      _accessCardInitState: fs.readFileSync(path.join(__dirname, '../../contracts/bridge/Relayer.tvc'), { encoding: 'base64' }),
+      _accessCardInitState: fs.readFileSync(path.join(__dirname, '../../build/Relayer.tvc'), { encoding: 'base64' }),
       _initialValue: 1000000
     })
     // load bridge
     const bridgeKeys = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../contracts/bridge/Bridge.tvc'),
-      path.join(__dirname, '../../contracts/bridge/Bridge.abi.json'),
+      path.join(__dirname, '../../build/Bridge.tvc'),
+      path.join(__dirname, '../../build/Bridge.abi.json'),
       { contractName: 'b', keys: bridgeKeys }
     )
     // load and deploy bridge vote controller
     const bridgeVoteControllerKeys = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../contracts/bridge/BridgeVoteController.tvc'),
-      path.join(__dirname, '../../contracts/bridge/BridgeVoteController.abi.json'),
+      path.join(__dirname, '../../build/BridgeVoteController.tvc'),
+      path.join(__dirname, '../../build/BridgeVoteController.abi.json'),
       { contractName: 'bvc', keys: bridgeVoteControllerKeys }
     )
     await manager.contracts.bvc.deployContract({
@@ -55,27 +55,27 @@ describe('Bridge. Some full and direct.', function () {
     // load valid relayers
     const firstRelayerKeys = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../contracts/bridge/Relayer.tvc'),
-      path.join(__dirname, '../../contracts/bridge/Relayer.abi.json'),
+      path.join(__dirname, '../../build/Relayer.tvc'),
+      path.join(__dirname, '../../build/Relayer.abi.json'),
       { contractName: 'r1', keys: firstRelayerKeys }
     )
     const secondRelayerKeys = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../contracts/bridge/Relayer.tvc'),
-      path.join(__dirname, '../../contracts/bridge/Relayer.abi.json'),
+      path.join(__dirname, '../../build/Relayer.tvc'),
+      path.join(__dirname, '../../build/Relayer.abi.json'),
       { contractName: 'r2', keys: secondRelayerKeys }
     )
     // deploy bridge
     await manager.contracts.b.deployContract({
-      _relayerInitState: fs.readFileSync(path.join(__dirname, '../../contracts/bridge/Relayer.tvc'), { encoding: 'base64' }),
+      _relayerInitState: fs.readFileSync(path.join(__dirname, '../../build/Relayer.tvc'), { encoding: 'base64' }),
       _accessControllerAddress: manager.contracts.ac.address,
       _voteControllerAddress: manager.contracts.bvc.address
     })
     // load and deploy handler
     const handlerKeys = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../contracts/bridge/Handler.tvc'),
-      path.join(__dirname, '../../contracts/bridge/Handler.abi.json'),
+      path.join(__dirname, '../../build/Handler.tvc'),
+      path.join(__dirname, '../../build/Handler.abi.json'),
       { contractName: 'h', keys: handlerKeys }
     )
     await manager.contracts.h.deployContract({
@@ -87,13 +87,13 @@ describe('Bridge. Some full and direct.', function () {
     await manager.contracts.r1.deployContract({
       _accessControllerAddress: manager.contracts.ac.address,
       _myPublicKey: '0x' + firstRelayerKeys.public,
-      _myInitState: fs.readFileSync(path.join(__dirname, '../../contracts/bridge/Relayer.tvc'), { encoding: 'base64' }),
+      _myInitState: fs.readFileSync(path.join(__dirname, '../../build/Relayer.tvc'), { encoding: 'base64' }),
       _bridgeAddress: manager.contracts.b.address
     })
     await manager.contracts.r2.deployContract({
       _accessControllerAddress: manager.contracts.ac.address,
       _myPublicKey: '0x' + secondRelayerKeys.public,
-      _myInitState: fs.readFileSync(path.join(__dirname, '../../contracts/bridge/Relayer.tvc'), { encoding: 'base64' }),
+      _myInitState: fs.readFileSync(path.join(__dirname, '../../build/Relayer.tvc'), { encoding: 'base64' }),
       _bridgeAddress: manager.contracts.b.address
     })
     // create a superadmin (1 relayer)
@@ -127,7 +127,7 @@ describe('Bridge. Some full and direct.', function () {
     // Proposal variables
     const chainId = 12
     const nonce = 1
-    const data = toHex('HelloWorld')
+    const data = ''
     // First vote is for creating a Proposal smart contract
     const beforeAccountsCount = await manager.client.queries.getAccountsCount()
     await manager.contracts.r1.runContract(
@@ -140,7 +140,7 @@ describe('Bridge. Some full and direct.', function () {
     // we need to save address for future getters run
     const proposalAddress = (await manager.contracts.bvc.runLocal(
       'getProposalAddress',
-      { chainId, nonce: nonce }
+      { chainId, nonce: nonce, data: data }
     )).output.proposal
     console.log('Proposal Address: ', proposalAddress)
     // next vote is only vote (with no contract deployment)

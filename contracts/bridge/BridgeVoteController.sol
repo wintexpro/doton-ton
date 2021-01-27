@@ -27,12 +27,12 @@ contract BridgeVoteController is VoteController {
         bridgeAddress = _bridgeAddress;
     }
 
-    function voteByBridge(address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, bytes32 data) external {
+    function voteByBridge(address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, TvmCell data) external {
         require (msg.sender == bridgeAddress);
         require(choice == 0 || choice == 1);
         tvm.accept();
         // 2 calls (1 with error, 1 is ok)
         createProposal(chainId, nonce, data, choice, voter, handlerAddress, messageType);
-        IProposal(getProposalAddress(chainId, nonce)).voteByController{bounce:true, value:300000000}(voter, choice, messageType, handlerAddress);
+        IProposal(getProposalAddress(chainId, nonce, data)).voteByController{bounce:true, value:300000000}(voter, choice, messageType, handlerAddress);
     }
 }

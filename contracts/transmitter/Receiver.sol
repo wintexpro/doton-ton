@@ -11,7 +11,7 @@ contract Receiver {
         emit DataReceived(data, destinationChainId, _nonce[destinationChainId]);
     }
 
-    function getNonceByChainId(uint256 destinationChainId) public returns(uint256 nonce) {
+    function getNonceByChainId(uint256 destinationChainId) public view returns(uint256 nonce) {
         return _nonce[destinationChainId];
     }
 }

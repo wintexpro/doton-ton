@@ -7,9 +7,9 @@ contract Handler {
     address bridgeVoteControllerAddress;
     uint256 bridgeVoteControllerPubKey;
 
-    event ProposalExecuted(uint8 chainId, uint64 nonce, bytes32 messageType, bytes32 data);
+    event ProposalExecuted(uint8 chainId, uint64 nonce, bytes32 messageType, TvmCell data);
 
-    modifier isValidProposal(uint256 proposalPubKey, uint8 chainId, uint64 nonce) {
+    modifier isValidProposal(uint256 proposalPubKey, uint8 chainId, uint64 nonce, TvmCell data) {
         TvmCell proposalStateInit = tvm.buildStateInit({
             code: proposalCode,
             pubkey: bridgeVoteControllerPubKey,
@@ -17,7 +17,8 @@ contract Handler {
             varInit: {
                 chainId: chainId,
                 nonce: nonce,
-                voteControllerAddress: bridgeVoteControllerAddress
+                voteControllerAddress: bridgeVoteControllerAddress,
+                data: data
             }
         });
         require (msg.sender.value == tvm.hash(proposalStateInit), 101);
@@ -31,7 +32,7 @@ contract Handler {
         bridgeVoteControllerPubKey = _bridgeVoteControllerPubKey;
     }
 
-    function executeProposal(uint256 proposalPubKey, uint8 chainId, uint64 nonce, bytes32 messageType, bytes32 data) isValidProposal(proposalPubKey, chainId, nonce) external view {
+    function executeProposal(uint256 proposalPubKey, uint8 chainId, uint64 nonce, bytes32 messageType, TvmCell data) isValidProposal(proposalPubKey, chainId, nonce, data) external view {
         emit ProposalExecuted(chainId, nonce, messageType, data);
     }
 }

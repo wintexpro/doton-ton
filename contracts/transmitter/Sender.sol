@@ -11,7 +11,7 @@ contract Sender {
         _;
     }
 
-    function sendData(IReceiver destination, bool bounce, uint128 value, bytes32 data, uint256 destinationChainId) external onlyOwner {
+    function sendData(IReceiver destination, bool bounce, uint128 value, bytes32 data, uint256 destinationChainId) onlyOwner external view {
         tvm.accept();
         destination.receiveData{bounce:bounce, value:value}(data, destinationChainId);
     } 

@@ -1,7 +1,7 @@
 pragma solidity >= 0.6.0;
 
 interface IBridgeVoteController {
-    function voteByBridge(address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, bytes32 data) external;
+    function voteByBridge(address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, TvmCell data) external;
 }
 
 contract Bridge {
@@ -28,7 +28,7 @@ contract Bridge {
         handlers[messageType] = handlerAddress;
     }
 
-    function relayerVoteForProposal(uint8 choice, uint8 chainId, bytes32 messageType, uint64 nonce, bytes32 data, uint256 relayerPubKey) isValidRelayer(relayerPubKey) external {
+    function relayerVoteForProposal(uint8 choice, uint8 chainId, bytes32 messageType, uint64 nonce, TvmCell data, uint256 relayerPubKey) isValidRelayer(relayerPubKey) external view {
         require(msg.value >= 400000000); // TODO ???
         require(handlers[messageType] != address(0));
         IBridgeVoteController(voteControllerAddress).voteByBridge{bounce:true, value:350000000}(msg.sender, choice, chainId, messageType, handlers[messageType], nonce, data);
