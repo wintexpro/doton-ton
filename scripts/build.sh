@@ -46,11 +46,16 @@ cd "$root"
 
 # handlers
 cd ./contracts/bridge/handlers
-## Handler
+## MessageHandler
 $solcExec MessageHandler.sol
 MessageHandlerLinkCommand=`tvm_linker compile MessageHandler.code --abi-json MessageHandler.abi.json`
 MessageHandlerLinkName=`echo $MessageHandlerLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
 mv $MessageHandlerLinkName MessageHandler.tvc
+## Tip3Handler
+$solcExec Tip3Handler.sol
+Tip3HandlerLinkCommand=`tvm_linker compile Tip3Handler.code --abi-json Tip3Handler.abi.json`
+Tip3HandlerLinkName=`echo $Tip3HandlerLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
+mv $Tip3HandlerLinkName Tip3Handler.tvc
 rm *.code
 mv *.tvc "$root/build"
 mv *.abi.json "$root/build"
