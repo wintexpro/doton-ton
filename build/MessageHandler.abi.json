@@ -23,6 +23,17 @@
 			],
 			"outputs": [
 			]
+		},
+		{
+			"name": "receiveMessage",
+			"inputs": [
+				{"name":"chainId","type":"uint8"},
+				{"name":"nonce","type":"uint64"},
+				{"name":"messageType","type":"uint256"},
+				{"name":"data","type":"uint256"}
+			],
+			"outputs": [
+			]
 		}
 	],
 	"data": [
@@ -34,7 +45,7 @@
 				{"name":"chainId","type":"uint8"},
 				{"name":"nonce","type":"uint64"},
 				{"name":"messageType","type":"uint256"},
-				{"name":"data","type":"cell"}
+				{"name":"data","type":"uint256"}
 			],
 			"outputs": [
 			]
