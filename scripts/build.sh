@@ -21,6 +21,23 @@ mv *.tvc "$root/build"
 mv *.abi.json "$root/build"
 cd "$root"
 
+# token
+cd ./contracts/token
+## RootTokenContract
+$solcExec RootTokenContract.sol 
+RootTokenContractLinkCommand=`tvm_linker compile RootTokenContract.code --abi-json RootTokenContract.abi.json`
+RootTokenContractLinkName=`echo $RootTokenContractLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
+mv $RootTokenContractLinkName RootTokenContract.tvc
+## TONTokenWallet
+$solcExec TONTokenWallet.sol
+TONTokenWalletLinkCommand=`tvm_linker compile TONTokenWallet.code --abi-json TONTokenWallet.abi.json`
+TONTokenWalletLinkName=`echo $TONTokenWalletLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
+mv $TONTokenWalletLinkName TONTokenWallet.tvc
+rm *.code
+mv *.tvc "$root/build"
+mv *.abi.json "$root/build"
+cd "$root"
+
 
 # bridge
 cd ./contracts/bridge

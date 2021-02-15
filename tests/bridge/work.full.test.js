@@ -2,8 +2,10 @@ const assert = require('assert')
 const fs = require('fs')
 const path = require('path')
 const toHex = require('../helper').toHex
+const crypto = require('crypto')
 
 describe('Bridge. Some full and direct.', function () {
+  const zeroAddress = '0:0000000000000000000000000000000000000000000000000000000000000000'
   before(async function () {
     console.log('Start..')
     // await restart() // recreate and start containers
@@ -93,36 +95,39 @@ describe('Bridge. Some full and direct.', function () {
     // load tip3 wallet
     const tip3WalletKeys = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../static/tip3/TONTokenWallet.tvc'),
-      path.join(__dirname, '../../static/tip3/TONTokenWallet.abi.json'),
+      path.join(__dirname, '../../build/TONTokenWallet.tvc'),
+      path.join(__dirname, '../../build/TONTokenWallet.abi.json'),
       { contractName: 'tip3w', keys: tip3WalletKeys }
     )
     // deploy tip3 root
     const tip3RootKeys = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../static/tip3/RootTokenContract.tvc'),
-      path.join(__dirname, '../../static/tip3/RootTokenContract.abi.json'),
+      path.join(__dirname, '../../build/RootTokenContract.tvc'),
+      path.join(__dirname, '../../build/RootTokenContract.abi.json'),
       { contractName: 'tip3root', keys: tip3RootKeys }
     )
-    await manager.contracts.tip3root.deployContractWithCustomHeaders({
+    await manager.contracts.tip3root.complicatedDeploy({}, {}, {
+      _randomNonce: '0x' + crypto.createHash('sha256').update(crypto.randomBytes(32)).digest('hex'),
       wallet_code: (await manager.client.contracts.getCodeFromImage({ imageBase64: manager.contracts.tip3w.contractPackage.imageBase64 })).codeBase64,
       name: toHex('Test', false),
       symbol: toHex('TST', false),
       decimals: 0,
       root_public_key: 0,
-      total_supply: 1000,
-      root_owner: '0x' + (await manager.contracts.th.futureAddress()).substr(2)
-    }, { pubkey: tip3RootKeys.public })
+      root_owner_address: await manager.contracts.th.futureAddress()
+    }).catch((e) => {
+      console.log(e)
+    })
     // deploy test tip3 wallet
-    await manager.contracts.tip3w.deployContractWithCustomHeaders({
-      name: toHex('Test', false),
-      symbol: toHex('TST', false),
-      decimals: 0,
-      root_public_key: '0x' + tip3RootKeys.public,
+    await manager.contracts.tip3w.complicatedDeploy({}, {}, {
+      // name: toHex('Test', false),
+      // symbol: toHex('TST', false),
+      // decimals: 0,
+      // root_public_key: '0x' + tip3RootKeys.public,
       wallet_public_key: '0x' + tip3WalletKeys.public,
       root_address: manager.contracts.tip3root.address,
-      code: (await manager.client.contracts.getCodeFromImage({ imageBase64: manager.contracts.tip3w.contractPackage.imageBase64 })).codeBase64
-    }, { pubkey: tip3WalletKeys.public })
+      code: (await manager.client.contracts.getCodeFromImage({ imageBase64: manager.contracts.tip3w.contractPackage.imageBase64 })).codeBase64,
+      owner_address: zeroAddress
+    })
     // deploy tip3 handler
     await manager.contracts.th.deployContract({
       _proposalCode: (await manager.client.contracts.getCodeFromImage({ imageBase64: manager.contracts.Proposal.contractPackage.imageBase64 })).codeBase64,
@@ -179,21 +184,20 @@ describe('Bridge. Some full and direct.', function () {
     // calculate encoded granting tip3 message body as a data
     const runBody = await manager.client.contracts.createRunBody({
       abi: manager.contracts.tip3root.contractPackage.abi,
-      function: 'grant',
+      function: 'mint',
       params: {
-        dest: manager.contracts.tip3w.address,
-        tokens: 1,
-        grams: 100000000
+        to: manager.contracts.tip3w.address,
+        tokens: 1
       },
       internal: true
     })
     // old tip3 balance of destination
     const tokenBalanceBefore = (await manager.client.contracts.runLocal({
       address: manager.contracts.tip3w.address,
-      functionName: 'getBalance',
+      functionName: 'getDetails',
       abi: manager.contracts.tip3w.contractPackage.abi,
       input: {}
-    })).output.value0
+    })).output.value0.balance
     // Proposal variables
     const chainId = 12
     const nonce = 1
@@ -233,10 +237,10 @@ describe('Bridge. Some full and direct.', function () {
     await new Promise(resolve => setTimeout(resolve, 5000))
     const tokenBalanceAfter = (await manager.client.contracts.runLocal({
       address: manager.contracts.tip3w.address,
-      functionName: 'getBalance',
+      functionName: 'getDetails',
       abi: manager.contracts.tip3w.contractPackage.abi,
       input: {}
-    })).output.value0
+    })).output.value0.balance
     assert.equal(parseInt(tokenBalanceBefore, 16) + 1, parseInt(tokenBalanceAfter, 16))
   })
 })
