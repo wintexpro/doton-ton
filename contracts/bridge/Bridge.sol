@@ -33,4 +33,8 @@ contract Bridge {
         require(handlers[messageType] != address(0));
         IBridgeVoteController(voteControllerAddress).voteByBridge{bounce:true, value:350000000}(msg.sender, choice, chainId, messageType, handlers[messageType], nonce, data);
     }
+
+    function getHandlerAddressByMessageType(bytes32 messageType) external view returns (address) {
+        return handlers[messageType];
+    }
 }
