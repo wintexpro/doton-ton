@@ -1,8 +1,8 @@
 pragma solidity >= 0.6.0;
 
-import "./AbstractHandler.sol";
+import "./AbstractProposalHandler.sol";
 
-contract MessageHandler is AbstractHandler {
+contract MessageHandler is AbstractProposalHandler {
 
     event ProposalExecuted(uint8 chainId, uint64 nonce, bytes32 messageType, bytes32 data);
     
@@ -10,7 +10,7 @@ contract MessageHandler is AbstractHandler {
         TvmCell _proposalCode,
         address _bridgeVoteControllerAddress,
         uint256 _bridgeVoteControllerPubKey
-    ) AbstractHandler (
+    ) AbstractProposalHandler (
         _proposalCode,
         _bridgeVoteControllerAddress,
         _bridgeVoteControllerPubKey

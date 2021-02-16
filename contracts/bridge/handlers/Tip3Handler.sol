@@ -1,8 +1,8 @@
 pragma solidity >= 0.6.0;
 
-import "./AbstractHandler.sol";
+import "./AbstractProposalHandler.sol";
 
-contract Tip3Handler is AbstractHandler {
+contract Tip3Handler is AbstractProposalHandler {
 
     address tip3RootAddress;
 
@@ -11,7 +11,7 @@ contract Tip3Handler is AbstractHandler {
         address _bridgeVoteControllerAddress,
         uint256 _bridgeVoteControllerPubKey,
         address _tip3RootAddress
-    ) AbstractHandler (
+    ) AbstractProposalHandler (
         _proposalCode,
         _bridgeVoteControllerAddress,
         _bridgeVoteControllerPubKey

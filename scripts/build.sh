@@ -63,6 +63,11 @@ cd "$root"
 
 # handlers
 cd ./contracts/bridge/handlers
+## BurnedTokensHandler
+$solcExec BurnedTokensHandler.sol
+BurnedTokensHandlerLinkCommand=`tvm_linker compile BurnedTokensHandler.code --abi-json BurnedTokensHandler.abi.json`
+BurnedTokensHandlerLinkName=`echo $BurnedTokensHandlerLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
+mv $BurnedTokensHandlerLinkName BurnedTokensHandler.tvc
 ## MessageHandler
 $solcExec MessageHandler.sol
 MessageHandlerLinkCommand=`tvm_linker compile MessageHandler.code --abi-json MessageHandler.abi.json`
@@ -77,6 +82,7 @@ rm *.code
 mv *.tvc "$root/build"
 mv *.abi.json "$root/build"
 cd "$root"
+
 
 # transmitter
 cd ./contracts/transmitter

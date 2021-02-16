@@ -12,7 +12,7 @@ describe('Bridge. Some full and direct.', function () {
     await new Promise(resolve => setTimeout(resolve, 5000))
   })
 
-  async function deployAndPrepareBridgeComponents () {
+  async function deployAndPrepareBridgeComponents (isOwnerOfT3RootInternal = true) {
     const manager = new Manager()
     await manager.createClient(['http://localhost:80/graphql'])
     // load proposal only for getting CODE for deploy another components
@@ -112,8 +112,8 @@ describe('Bridge. Some full and direct.', function () {
       name: toHex('Test', false),
       symbol: toHex('TST', false),
       decimals: 0,
-      root_public_key: 0,
-      root_owner_address: await manager.contracts.th.futureAddress()
+      root_public_key: isOwnerOfT3RootInternal ? 0 : '0x' + tip3RootKeys.public,
+      root_owner_address: isOwnerOfT3RootInternal ? await manager.contracts.th.futureAddress() : zeroAddress
     }).catch((e) => {
       console.log(e)
     })
@@ -134,6 +134,18 @@ describe('Bridge. Some full and direct.', function () {
       _bridgeVoteControllerAddress: manager.contracts.bvc.address,
       _bridgeVoteControllerPubKey: '0x' + bridgeVoteControllerKeys.public,
       _tip3RootAddress: manager.contracts.tip3root.address
+    })
+    // load and deploy burned tokens handler
+    const burnedTokensHandlerKeys = await manager.createKeysAndReturn()
+    await manager.loadContract(
+      path.join(__dirname, '../../build/BurnedTokensHandler.tvc'),
+      path.join(__dirname, '../../build/BurnedTokensHandler.abi.json'),
+      { contractName: 'bth', keys: burnedTokensHandlerKeys }
+    )
+    await manager.contracts.bth.deployContract({
+      _tip3RootAddress: manager.contracts.tip3root.address
+    }).catch(e => {
+      console.log(e)
     })
     // deploy relayers
     await manager.contracts.r1.deployContract({
@@ -179,7 +191,7 @@ describe('Bridge. Some full and direct.', function () {
     return manager
   }
 
-  it('allin: positive for relayers', async function () {
+  it('allin: positive for relayers dot-ton', async function () {
     const manager = await deployAndPrepareBridgeComponents()
     // calculate encoded granting tip3 message body as a data
     const runBody = await manager.client.contracts.createRunBody({
@@ -234,6 +246,7 @@ describe('Bridge. Some full and direct.', function () {
       input: {}
     })).output.yesVotes
     assert.equal(2, parseInt(proposalYesVotes, 16))
+    // assert.equal(1, parseInt(proposalYesVotes, 16))
     await new Promise(resolve => setTimeout(resolve, 5000))
     const tokenBalanceAfter = (await manager.client.contracts.runLocal({
       address: manager.contracts.tip3w.address,
@@ -242,5 +255,67 @@ describe('Bridge. Some full and direct.', function () {
       input: {}
     })).output.value0.balance
     assert.equal(parseInt(tokenBalanceBefore, 16) + 1, parseInt(tokenBalanceAfter, 16))
+  })
+
+  it.only('allin: positive for relayers ton-dot', async function () {
+    const manager = await deployAndPrepareBridgeComponents(false)
+    const payloadParams = {
+      destinationChainID: '0x1',
+      resourceID: toHex('test'),
+      depositNonce: '0x1',
+      amount: '0x1',
+      recipient: toHex('addressp')
+    }
+    const data = await manager.client.contracts.createRunBody({
+      abi: manager.contracts.bth.contractPackage.abi,
+      function: 'deposit',
+      params: payloadParams,
+      internal: true
+    })
+    const testWalletKeys = await manager.createKeysAndReturn()
+    await manager.contracts.tip3root.runContract(
+      'deployWallet',
+      { tokens: 100, grams: 1000000000, wallet_public_key_: '0x' + testWalletKeys.public, owner_address_: zeroAddress, gas_back_address: manager.contracts.tip3root.address },
+      manager.contracts.tip3root.keys
+    )
+    const testWalletAddress = (await manager.client.contracts.runLocal({
+      address: manager.contracts.tip3root.address,
+      functionName: 'getWalletAddress',
+      abi: manager.contracts.tip3root.contractPackage.abi,
+      input: { wallet_public_key_: '0x' + testWalletKeys.public, owner_address_: zeroAddress }
+    })).output.value0
+    console.log('testWalletAddress: ', testWalletAddress)
+    await manager.client.contracts.run({
+      address: testWalletAddress,
+      abi: manager.contracts.tip3w.contractPackage.abi,
+      functionName: 'burnByOwner',
+      input: {
+        tokens: 10,
+        grams: 100000000,
+        callback_address: manager.contracts.bth.address,
+        callback_payload: data.bodyBase64
+      },
+      keyPair: testWalletKeys
+    })
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    const handlerOutbound = await manager.client.queries.messages.query({
+      filter: {
+        src: { eq: manager.contracts.bth.address },
+        dst: { eq: '' }
+      },
+      result: 'body',
+      limit: 1
+    })
+    const bodyForCheck = handlerOutbound[0].body
+    const decodedBody = await manager.client.contracts.decodeOutputMessageBody({
+      abi: manager.contracts.bth.contractPackage.abi,
+      bodyBase64: bodyForCheck,
+      internal: true
+    })
+    assert.equal(payloadParams.amount, decodedBody.output.amount)
+    assert.equal(payloadParams.depositNonce, decodedBody.output.depositNonce)
+    assert.equal(payloadParams.destinationChainID, decodedBody.output.destinationChainID)
+    assert.equal(payloadParams.recipient, decodedBody.output.recipient)
+    assert.equal(payloadParams.resourceID, decodedBody.output.resourceID)
   })
 })

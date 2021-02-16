@@ -2,7 +2,7 @@ pragma solidity >= 0.6.0;
 
 import "../../voting/Proposal.sol";
 
-contract AbstractHandler {
+contract AbstractProposalHandler {
     TvmCell proposalCode;
     address bridgeVoteControllerAddress;
     uint256 bridgeVoteControllerPubKey;
