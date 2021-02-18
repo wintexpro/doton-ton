@@ -18,6 +18,70 @@
 			]
 		},
 		{
+			"name": "getBalance",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
+			"name": "getWalletKey",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"}
+			]
+		},
+		{
+			"name": "getRootAddress",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "getOwnerAddress",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "getName",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"bytes"}
+			]
+		},
+		{
+			"name": "getSymbol",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"bytes"}
+			]
+		},
+		{
+			"name": "getDecimals",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint8"}
+			]
+		},
+		{
+			"name": "getRootPublicKey",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"}
+			]
+		},
+		{
 			"name": "accept",
 			"inputs": [
 				{"name":"tokens","type":"uint128"}
@@ -210,7 +274,11 @@
 		{"key":1,"name":"root_address","type":"address"},
 		{"key":2,"name":"code","type":"cell"},
 		{"key":3,"name":"wallet_public_key","type":"uint256"},
-		{"key":4,"name":"owner_address","type":"address"}
+		{"key":4,"name":"owner_address","type":"address"},
+		{"key":5,"name":"name","type":"bytes"},
+		{"key":6,"name":"symbol","type":"bytes"},
+		{"key":7,"name":"decimals","type":"uint8"},
+		{"key":8,"name":"root_public_key","type":"uint256"}
 	],
 	"events": [
 	]

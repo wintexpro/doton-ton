@@ -22,6 +22,11 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
     uint128 public balance;
     optional(AllowanceInfo) allowance_;
 
+    bytes static name;
+    bytes static symbol;
+    uint8 static decimals;
+    uint256 static root_public_key;
+
     address public receive_callback = address.makeAddrStd(0, 0);
 
     uint8 error_message_sender_is_not_my_owner            = 100;
@@ -57,6 +62,38 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
             owner_address,
             balance
         );
+    }
+
+    function getBalance() override external view returns (uint128){
+        return balance;
+    }
+
+    function getWalletKey() override external view returns (uint256){
+        return wallet_public_key;
+    }
+
+    function getRootAddress() override external view returns (address){
+        return root_address;
+    }
+
+    function getOwnerAddress() override external view returns (address){
+        return owner_address;
+    }
+
+    function getName() override external view returns (bytes){
+        return name;
+    }
+
+    function getSymbol() override external view returns (bytes){
+        return symbol;
+    }
+
+    function getDecimals() override external view returns (uint8){
+        return decimals;
+    }
+
+    function getRootPublicKey() override external view returns (uint256){
+        return root_public_key;
     }
 
     function accept(uint128 tokens) override external onlyRoot {

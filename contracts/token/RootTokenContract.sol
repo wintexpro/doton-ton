@@ -22,6 +22,7 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
     address static root_owner_address;
 
     uint128 public total_supply;
+    uint128 public total_granted;
 
     uint128 public start_gas_balance;
 
@@ -52,6 +53,30 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
             total_supply,
             start_gas_balance
         );
+    }
+
+    function getName() override external view returns (bytes){
+        return name;
+    }
+
+    function getSymbol() override external view returns (bytes){
+        return symbol;
+    }
+
+    function getDecimals() override external view returns (uint8){
+        return decimals;
+    }
+
+    function getRootPublicKey() override external view returns (uint256){
+        return root_public_key;
+    }
+
+    function getTotalSupply() override external view returns (uint128){
+        return total_supply;
+    }
+
+    function getTotalGranted() override external view returns (uint128){
+        return total_granted;
     }
 
     function getWalletAddress(uint256 wallet_public_key_, address owner_address_) override external returns (address) {
@@ -88,7 +113,11 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
                 root_address: address(this),
                 code: wallet_code,
                 wallet_public_key: wallet_public_key_,
-                owner_address: owner_address_
+                owner_address: owner_address_,
+                name: name,
+                symbol: symbol,
+                decimals: decimals,
+                root_public_key: root_public_key
             }
         }();
 
@@ -125,7 +154,11 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
                 root_address: address(this),
                 code: wallet_code,
                 wallet_public_key: wallet_public_key_,
-                owner_address: owner_address_
+                owner_address: owner_address_,
+                name: name,
+                symbol: symbol,
+                decimals: decimals,
+                root_public_key: root_public_key
             }
         }();
 
@@ -136,7 +169,7 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
         }
     }
 
-    function mint(uint128 tokens, address to) override external onlyOwner {
+    function mint(uint128 tokens) override external onlyOwner {
         if(root_owner_address.value == 0) {
             tvm.accept();
         } else {
@@ -144,6 +177,16 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
         }
 
         total_supply += tokens;
+    }
+
+    function grant(uint128 tokens, address to) override external onlyOwner {
+        if(root_owner_address.value == 0) {
+            tvm.accept();
+        } else {
+            tvm.rawReserve(math.max(start_gas_balance, address(this).balance - msg.value), 2); 
+        }
+
+        total_granted += tokens;
 
         ITONTokenWallet(to).accept(tokens);
 

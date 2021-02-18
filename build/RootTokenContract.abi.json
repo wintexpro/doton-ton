@@ -18,6 +18,54 @@
 			]
 		},
 		{
+			"name": "getName",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"bytes"}
+			]
+		},
+		{
+			"name": "getSymbol",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"bytes"}
+			]
+		},
+		{
+			"name": "getDecimals",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint8"}
+			]
+		},
+		{
+			"name": "getRootPublicKey",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"}
+			]
+		},
+		{
+			"name": "getTotalSupply",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
+			"name": "getTotalGranted",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
 			"name": "getWalletAddress",
 			"inputs": [
 				{"name":"wallet_public_key_","type":"uint256"},
@@ -52,6 +100,14 @@
 		},
 		{
 			"name": "mint",
+			"inputs": [
+				{"name":"tokens","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "grant",
 			"inputs": [
 				{"name":"tokens","type":"uint128"},
 				{"name":"to","type":"address"}
@@ -127,6 +183,14 @@
 			],
 			"outputs": [
 				{"name":"total_supply","type":"uint128"}
+			]
+		},
+		{
+			"name": "total_granted",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"total_granted","type":"uint128"}
 			]
 		},
 		{
