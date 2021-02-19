@@ -5,6 +5,10 @@
 		{
 			"name": "constructor",
 			"inputs": [
+				{"name":"_name","type":"bytes"},
+				{"name":"_symbol","type":"bytes"},
+				{"name":"_decimals","type":"uint8"},
+				{"name":"_root_public_key","type":"uint256"}
 			],
 			"outputs": [
 			]
@@ -249,11 +253,7 @@
 		{"key":1,"name":"root_address","type":"address"},
 		{"key":2,"name":"code","type":"cell"},
 		{"key":3,"name":"wallet_public_key","type":"uint256"},
-		{"key":4,"name":"owner_address","type":"address"},
-		{"key":5,"name":"name","type":"bytes"},
-		{"key":6,"name":"symbol","type":"bytes"},
-		{"key":7,"name":"decimals","type":"uint8"},
-		{"key":8,"name":"root_public_key","type":"uint256"}
+		{"key":4,"name":"owner_address","type":"address"}
 	],
 	"events": [
 	]

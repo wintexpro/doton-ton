@@ -12,12 +12,12 @@ import "./interfaces/ITokensReceivedCallback.sol";
 
 contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfers, IBurnableByOwnerTokenWallet, IBurnableByRootTokenWallet {
 
-    address root_address;
-    TvmCell code;
+    address static root_address;
+    TvmCell static code;
     //for external owner
-    uint256 wallet_public_key;
+    uint256 static wallet_public_key;
     //for internal owner
-    address owner_address;
+    address static owner_address;
 
     uint128 public balance;
     optional(AllowanceInfo) allowance_;
@@ -45,10 +45,6 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
     uint128 public target_gas_balance                      = 0.1 ton;
 
     constructor(
-        address _root_address,
-        TvmCell _code,
-        uint256 _wallet_public_key,
-        address _owner_address,
         bytes _name,
         bytes _symbol,
         uint8 _decimals,
@@ -61,10 +57,6 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
         if (owner_address.value != 0) {
             ITokenWalletDeployedCallback(owner_address).notifyWalletDeployed{value: 0.00001 ton}(root_address);
         }
-        root_address = _root_address;
-        code = _code;
-        wallet_public_key = _wallet_public_key;
-        owner_address = _owner_address;
         name = _name;
         symbol = _symbol;
         decimals = _decimals;

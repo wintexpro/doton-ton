@@ -110,12 +110,14 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
         address wallet = new TONTokenWallet{
             value: grams,
             code: wallet_code,
-            pubkey: wallet_public_key_
+            pubkey: wallet_public_key_,
+            varInit: {
+                root_address: address(this),
+                code: wallet_code,
+                wallet_public_key: wallet_public_key_,
+                owner_address: owner_address_ 
+            }
         }(
-            address(this),
-            wallet_code,
-            wallet_public_key_,
-            owner_address_,
             name,
             symbol,
             decimals,
@@ -150,12 +152,14 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
         new TONTokenWallet{
             value: grams,
             code: wallet_code,
-            pubkey: wallet_public_key_
+            pubkey: wallet_public_key_,
+            varInit: {
+                root_address: address(this),
+                code: wallet_code,
+                wallet_public_key: wallet_public_key_,
+                owner_address: owner_address_ 
+            }
         }(
-            address(this),
-            wallet_code,
-            wallet_public_key_,
-            owner_address_,
             name,
             symbol,
             decimals,
