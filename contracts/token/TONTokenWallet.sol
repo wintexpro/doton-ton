@@ -22,11 +22,6 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
     uint128 public balance;
     optional(AllowanceInfo) allowance_;
 
-    bytes name;
-    bytes symbol;
-    uint8 decimals;
-    uint256 root_public_key;
-
     address public receive_callback = address.makeAddrStd(0, 0);
 
     uint8 error_message_sender_is_not_my_owner            = 100;
@@ -44,12 +39,7 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
 
     uint128 public target_gas_balance                      = 0.1 ton;
 
-    constructor(
-        bytes _name,
-        bytes _symbol,
-        uint8 _decimals,
-        uint256 _root_public_key
-    ) public {
+    constructor() public {
         require((wallet_public_key != 0 && owner_address.value == 0) ||
                 (wallet_public_key == 0 && owner_address.value != 0),
                 error_define_wallet_public_key_or_owner_address);
@@ -57,10 +47,6 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
         if (owner_address.value != 0) {
             ITokenWalletDeployedCallback(owner_address).notifyWalletDeployed{value: 0.00001 ton}(root_address);
         }
-        name = _name;
-        symbol = _symbol;
-        decimals = _decimals;
-        root_public_key = _root_public_key;
     }
 
     function getDetails() override external view returns (ITONTokenWalletDetails){
@@ -87,22 +73,6 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
 
     function getOwnerAddress() override external view returns (address){
         return owner_address;
-    }
-
-    function getName() override external view returns (bytes){
-        return name;
-    }
-
-    function getSymbol() override external view returns (bytes){
-        return symbol;
-    }
-
-    function getDecimals() override external view returns (uint8){
-        return decimals;
-    }
-
-    function getRootPublicKey() override external view returns (uint256){
-        return root_public_key;
     }
 
     function accept(uint128 tokens) override external onlyRoot {

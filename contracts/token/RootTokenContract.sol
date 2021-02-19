@@ -117,12 +117,7 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
                 wallet_public_key: wallet_public_key_,
                 owner_address: owner_address_ 
             }
-        }(
-            name,
-            symbol,
-            decimals,
-            root_public_key
-        );
+        }();
 
         ITONTokenWallet(wallet).accept(tokens);
 
@@ -159,12 +154,7 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
                 wallet_public_key: wallet_public_key_,
                 owner_address: owner_address_ 
             }
-        }(
-            name,
-            symbol,
-            decimals,
-            root_public_key
-        );
+        }();
 
         if (gas_back_address.value != 0) {
             gas_back_address.transfer({ value: 0, flag: 128 }); 
