@@ -1,4 +1,4 @@
-pragma solidity >= 0.6.0;
+pragma ton-solidity ^0.36.0;
 
 interface IAccessController {
     function changeSuperAdmin(address newSuperAdminAddress, uint256 myPublicKey) external;
