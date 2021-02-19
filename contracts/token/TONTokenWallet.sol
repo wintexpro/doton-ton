@@ -12,20 +12,20 @@ import "./interfaces/ITokensReceivedCallback.sol";
 
 contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfers, IBurnableByOwnerTokenWallet, IBurnableByRootTokenWallet {
 
-    address static root_address;
-    TvmCell static code;
+    address root_address;
+    TvmCell code;
     //for external owner
-    uint256 static wallet_public_key;
+    uint256 wallet_public_key;
     //for internal owner
-    address static owner_address;
+    address owner_address;
 
     uint128 public balance;
     optional(AllowanceInfo) allowance_;
 
-    bytes static name;
-    bytes static symbol;
-    uint8 static decimals;
-    uint256 static root_public_key;
+    bytes name;
+    bytes symbol;
+    uint8 decimals;
+    uint256 root_public_key;
 
     address public receive_callback = address.makeAddrStd(0, 0);
 
@@ -44,7 +44,16 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
 
     uint128 public target_gas_balance                      = 0.1 ton;
 
-    constructor() public {
+    constructor(
+        address _root_address,
+        TvmCell _code,
+        uint256 _wallet_public_key,
+        address _owner_address,
+        bytes _name,
+        bytes _symbol,
+        uint8 _decimals,
+        uint256 _root_public_key
+    ) public {
         require((wallet_public_key != 0 && owner_address.value == 0) ||
                 (wallet_public_key == 0 && owner_address.value != 0),
                 error_define_wallet_public_key_or_owner_address);
@@ -52,6 +61,14 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
         if (owner_address.value != 0) {
             ITokenWalletDeployedCallback(owner_address).notifyWalletDeployed{value: 0.00001 ton}(root_address);
         }
+        root_address = _root_address;
+        code = _code;
+        wallet_public_key = _wallet_public_key;
+        owner_address = _owner_address;
+        name = _name;
+        symbol = _symbol;
+        decimals = _decimals;
+        root_public_key = _root_public_key;
     }
 
     function getDetails() override external view returns (ITONTokenWalletDetails){

@@ -110,18 +110,17 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
         address wallet = new TONTokenWallet{
             value: grams,
             code: wallet_code,
-            pubkey: wallet_public_key_,
-            varInit: {
-                root_address: address(this),
-                code: wallet_code,
-                wallet_public_key: wallet_public_key_,
-                owner_address: owner_address_,
-                name: name,
-                symbol: symbol,
-                decimals: decimals,
-                root_public_key: root_public_key
-            }
-        }();
+            pubkey: wallet_public_key_
+        }(
+            address(this),
+            wallet_code,
+            wallet_public_key_,
+            owner_address_,
+            name,
+            symbol,
+            decimals,
+            root_public_key
+        );
 
         ITONTokenWallet(wallet).accept(tokens);
 
@@ -151,18 +150,17 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
         new TONTokenWallet{
             value: grams,
             code: wallet_code,
-            pubkey: wallet_public_key_,
-            varInit: {
-                root_address: address(this),
-                code: wallet_code,
-                wallet_public_key: wallet_public_key_,
-                owner_address: owner_address_,
-                name: name,
-                symbol: symbol,
-                decimals: decimals,
-                root_public_key: root_public_key
-            }
-        }();
+            pubkey: wallet_public_key_
+        }(
+            address(this),
+            wallet_code,
+            wallet_public_key_,
+            owner_address_,
+            name,
+            symbol,
+            decimals,
+            root_public_key
+        );
 
         if (gas_back_address.value != 0) {
             gas_back_address.transfer({ value: 0, flag: 128 }); 
