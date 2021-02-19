@@ -13,6 +13,7 @@ import "./TONTokenWallet.sol";
 contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IBurnableByRootTokenRootContract {
 
     uint256 static _randomNonce;
+    bool superControlEnabled = true;
 
     bytes public static name;
     bytes public static symbol;
@@ -30,6 +31,7 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
     uint8 error_not_enough_balance = 101;
     uint8 error_message_sender_is_not_good_wallet = 103;
     uint8 error_define_wallet_public_key_or_owner_address = 106;
+    uint8 error_message_super_control_enabled = 107;
 
     constructor() public {
         require((root_public_key != 0 && root_owner_address.value == 0) ||
@@ -195,13 +197,24 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
         }
     }
 
+    function forbidRootControl() external onlyOwner {
+        if(root_owner_address.value == 0) {
+            tvm.accept();
+        } else {
+            tvm.rawReserve(math.max(start_gas_balance, address(this).balance - msg.value), 2); 
+        }
 
-    function proxyBurn(
+        superControlEnabled = false;
+    }
+
+    function burnTokensOnWallet(
         uint128 tokens,
         address sender_address,
         address callback_address,
         TvmCell callback_payload
     ) override external onlyInternalOwner {
+        require(superControlEnabled, error_message_super_control_enabled);
+
         tvm.rawReserve(address(this).balance - msg.value, 2); 
         address expectedWalletAddress = getExpectedWalletAddress(0, sender_address);
         IBurnableByRootTokenWallet(expectedWalletAddress).burnByRoot{value: 0, flag: 128}( 

@@ -116,7 +116,14 @@
 			]
 		},
 		{
-			"name": "proxyBurn",
+			"name": "forbidRootControl",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "burnTokensOnWallet",
 			"inputs": [
 				{"name":"tokens","type":"uint128"},
 				{"name":"sender_address","type":"address"},
