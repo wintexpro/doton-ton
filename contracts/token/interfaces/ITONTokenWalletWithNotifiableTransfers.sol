@@ -19,13 +19,4 @@ interface ITONTokenWalletWithNotifiableTransfers {
         uint128 grams,
         TvmCell payload
     ) external;
-
-    function transferToRecipientWithNotify(
-        uint256 recipient_public_key,
-        address recipient_address,
-        uint128 tokens,
-        uint128 deploy_grams,
-        uint128 transfer_grams,
-        TvmCell payload
-    ) external;
 }

@@ -196,7 +196,7 @@ describe('Bridge. Some full and direct.', function () {
     // calculate encoded granting tip3 message body as a data
     const runBody = await manager.client.contracts.createRunBody({
       abi: manager.contracts.tip3root.contractPackage.abi,
-      function: 'mint',
+      function: 'grant',
       params: {
         to: manager.contracts.tip3w.address,
         tokens: 1
@@ -257,7 +257,7 @@ describe('Bridge. Some full and direct.', function () {
     assert.equal(parseInt(tokenBalanceBefore, 16) + 1, parseInt(tokenBalanceAfter, 16))
   })
 
-  it.only('allin: positive for relayers ton-dot', async function () {
+  it('allin: positive for relayers ton-dot', async function () {
     const manager = await deployAndPrepareBridgeComponents(false)
     const payloadParams = {
       destinationChainID: '0x1',
