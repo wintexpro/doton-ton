@@ -114,8 +114,6 @@ describe('Bridge. Some full and direct.', function () {
       decimals: 0,
       root_public_key: isOwnerOfT3RootInternal ? 0 : '0x' + tip3RootKeys.public,
       root_owner_address: isOwnerOfT3RootInternal ? await manager.contracts.th.futureAddress() : zeroAddress
-    }).catch((e) => {
-      console.log(e)
     })
     // deploy test tip3 wallet
     await manager.contracts.tip3w.complicatedDeploy({}, {}, {
@@ -263,7 +261,7 @@ describe('Bridge. Some full and direct.', function () {
       destinationChainID: '0x1',
       resourceID: toHex('test'),
       depositNonce: '0x1',
-      amount: '0x1',
+      amount: 10,
       recipient: toHex('addressp')
     }
     const data = await manager.client.contracts.createRunBody({
@@ -297,6 +295,7 @@ describe('Bridge. Some full and direct.', function () {
       },
       keyPair: testWalletKeys
     })
+
     await new Promise(resolve => setTimeout(resolve, 3000))
     const handlerOutbound = await manager.client.queries.messages.query({
       filter: {
@@ -306,6 +305,7 @@ describe('Bridge. Some full and direct.', function () {
       result: 'body',
       limit: 1
     })
+    assert.notEqual(handlerOutbound[0], undefined)
     const bodyForCheck = handlerOutbound[0].body
     const decodedBody = await manager.client.contracts.decodeOutputMessageBody({
       abi: manager.contracts.bth.contractPackage.abi,
