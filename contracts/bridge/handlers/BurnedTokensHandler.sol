@@ -21,6 +21,15 @@ contract BurnedTokensHandler {
         address wallet_address
     ) external {
         require(msg.sender == tip3RootAddress);
+        (
+            uint32 _id,
+            uint8 _destinationChainID,
+            uint256 _resourceID,
+            uint64 _depositNonce,
+            uint128 _amount,
+            uint256 _recipient
+        ) = payload.toSlice().decode(uint32, uint8, uint256, uint64, uint128, uint256);
+        require(tokens == _amount, 103);
         address(this).transfer(100000000, false, 0, payload);
     }
 
