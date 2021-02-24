@@ -179,7 +179,8 @@ contract RootTokenContract is IRootTokenContract, IBurnableTokenRootContract, IB
         } else {
             tvm.rawReserve(math.max(start_gas_balance, address(this).balance - msg.value), 2); 
         }
-
+        // TODO: think about it. grant = mint + grant or not?
+        total_supply += tokens;
         total_granted += tokens;
 
         ITONTokenWallet(to).accept(tokens);
