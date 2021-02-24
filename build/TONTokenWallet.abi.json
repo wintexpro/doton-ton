@@ -1,6 +1,6 @@
 {
 	"ABI version": 2,
-	"header": ["time", "expire"],
+	"header": ["pubkey", "time", "expire"],
 	"functions": [
 		{
 			"name": "constructor",
@@ -15,38 +15,6 @@
 			],
 			"outputs": [
 				{"components":[{"name":"root_address","type":"address"},{"name":"code","type":"cell"},{"name":"wallet_public_key","type":"uint256"},{"name":"owner_address","type":"address"},{"name":"balance","type":"uint128"}],"name":"value0","type":"tuple"}
-			]
-		},
-		{
-			"name": "getBalance",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"value0","type":"uint128"}
-			]
-		},
-		{
-			"name": "getWalletKey",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"value0","type":"uint256"}
-			]
-		},
-		{
-			"name": "getRootAddress",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"value0","type":"address"}
-			]
-		},
-		{
-			"name": "getOwnerAddress",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"value0","type":"address"}
 			]
 		},
 		{
@@ -78,6 +46,31 @@
 		{
 			"name": "disapprove",
 			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "transferToRecipient",
+			"inputs": [
+				{"name":"recipient_public_key","type":"uint256"},
+				{"name":"recipient_address","type":"address"},
+				{"name":"tokens","type":"uint128"},
+				{"name":"deploy_grams","type":"uint128"},
+				{"name":"transfer_grams","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "transferToRecipientWithNotify",
+			"inputs": [
+				{"name":"recipient_public_key","type":"uint256"},
+				{"name":"recipient_address","type":"address"},
+				{"name":"tokens","type":"uint128"},
+				{"name":"deploy_grams","type":"uint128"},
+				{"name":"transfer_grams","type":"uint128"},
+				{"name":"payload","type":"cell"}
 			],
 			"outputs": [
 			]

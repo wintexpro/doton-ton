@@ -14,10 +14,6 @@ interface ITONTokenWallet is AllowanceInfoStructure {
     }
 
     function getDetails() external view returns (ITONTokenWalletDetails);
-    function getBalance() external view returns (uint128);
-    function getWalletKey() external view returns (uint256);
-    function getRootAddress() external view returns (address);
-    function getOwnerAddress() external view returns (address);
 
     function accept(uint128 tokens) external;
 
@@ -27,6 +23,13 @@ interface ITONTokenWallet is AllowanceInfoStructure {
 
     function transfer(address to, uint128 tokens, uint128 grams) external;
     function transferFrom(address from, address to, uint128 tokens, uint128 grams) external;
+    function transferToRecipient(
+        uint256 recipient_public_key,
+        address recipient_address,
+        uint128 tokens,
+        uint128 deploy_grams,
+        uint128 transfer_grams
+    ) external;
 
     function internalTransfer(
         uint128 tokens,

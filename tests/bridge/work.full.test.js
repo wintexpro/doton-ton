@@ -106,14 +106,15 @@ describe('Bridge. Some full and direct.', function () {
       path.join(__dirname, '../../build/RootTokenContract.abi.json'),
       { contractName: 'tip3root', keys: tip3RootKeys }
     )
-    await manager.contracts.tip3root.complicatedDeploy({}, {}, {
+    await manager.contracts.tip3root.complicatedDeploy({
+      root_public_key_: isOwnerOfT3RootInternal ? 0 : '0x' + tip3RootKeys.public,
+      root_owner_address_: isOwnerOfT3RootInternal ? await manager.contracts.th.futureAddress() : zeroAddress
+    }, {}, {
       _randomNonce: '0x' + crypto.createHash('sha256').update(crypto.randomBytes(32)).digest('hex'),
       wallet_code: (await manager.client.contracts.getCodeFromImage({ imageBase64: manager.contracts.tip3w.contractPackage.imageBase64 })).codeBase64,
       name: toHex('Test', false),
       symbol: toHex('TST', false),
-      decimals: 0,
-      root_public_key: isOwnerOfT3RootInternal ? 0 : '0x' + tip3RootKeys.public,
-      root_owner_address: isOwnerOfT3RootInternal ? await manager.contracts.th.futureAddress() : zeroAddress
+      decimals: 0
     })
     // deploy test tip3 wallet
     await manager.contracts.tip3w.complicatedDeploy({}, {}, {
@@ -194,7 +195,7 @@ describe('Bridge. Some full and direct.', function () {
     // calculate encoded granting tip3 message body as a data
     const runBody = await manager.client.contracts.createRunBody({
       abi: manager.contracts.tip3root.contractPackage.abi,
-      function: 'grant',
+      function: 'mint',
       params: {
         to: manager.contracts.tip3w.address,
         tokens: 1

@@ -2,7 +2,7 @@ pragma ton-solidity ^0.36.0;
 pragma AbiHeader expire;
 
 interface IBurnableByRootTokenRootContract {
-    function burnTokensOnWallet(
+    function proxyBurn(
         uint128 tokens,
         address sender_address,
         address callback_address,

@@ -1,6 +1,7 @@
 pragma ton-solidity ^0.36.0;
-pragma AbiHeader time;
+
 pragma AbiHeader expire;
+pragma AbiHeader pubkey;
 
 import "./interfaces/ITONTokenWallet.sol";
 import "./interfaces/ITONTokenWalletWithNotifiableTransfers.sol";
@@ -59,22 +60,6 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
         );
     }
 
-    function getBalance() override external view returns (uint128){
-        return balance;
-    }
-
-    function getWalletKey() override external view returns (uint256){
-        return wallet_public_key;
-    }
-
-    function getRootAddress() override external view returns (address){
-        return root_address;
-    }
-
-    function getOwnerAddress() override external view returns (address){
-        return owner_address;
-    }
-
     function accept(uint128 tokens) override external onlyRoot {
         balance += tokens;
     }
@@ -116,6 +101,110 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
 
         if (owner_address.value != 0 ) {
             msg.sender.transfer({ value: 0, flag: 128 });
+        }
+    }
+
+    function transferToRecipient(
+        uint256 recipient_public_key,
+        address recipient_address,
+        uint128 tokens,
+        uint128 deploy_grams,
+        uint128 transfer_grams
+    ) override external onlyOwner {
+        TvmBuilder builder;
+        _transferToRecipient(
+            recipient_public_key,
+            recipient_address,
+            tokens,
+            deploy_grams,
+            transfer_grams,
+            false,
+            builder.toCell()
+        );
+    }
+
+    function transferToRecipientWithNotify(
+        uint256 recipient_public_key,
+        address recipient_address,
+        uint128 tokens,
+        uint128 deploy_grams,
+        uint128 transfer_grams,
+        TvmCell payload
+    ) override external onlyOwner {
+        _transferToRecipient(
+            recipient_public_key,
+            recipient_address,
+            tokens,
+            deploy_grams,
+            transfer_grams,
+            true,
+            payload
+        );
+    }
+
+    function _transferToRecipient(
+        uint256 recipient_public_key,
+        address recipient_address,
+        uint128 tokens,
+        uint128 deploy_grams,
+        uint128 transfer_grams,
+        bool notify_receiver,
+        TvmCell payload
+    ) private inline {
+        require(tokens > 0);
+        require(tokens <= balance, error_not_enough_balance);
+        require((recipient_address.value != 0 && recipient_public_key == 0) ||
+                (recipient_address.value == 0 && recipient_public_key != 0),
+                error_define_wallet_public_key_or_owner_address);
+
+        if (owner_address.value != 0 ) {
+            uint128 reserve = math.max(target_gas_balance, address(this).balance - msg.value);
+            require(address(this).balance > reserve + target_gas_balance + deploy_grams, error_low_message_value);
+            tvm.rawReserve(reserve, 2);
+        } else {
+            require(address(this).balance > deploy_grams + transfer_grams, error_low_message_value);
+            require(transfer_grams > target_gas_balance, error_low_message_value);
+            tvm.accept();
+        }
+
+        TvmCell stateInit = tvm.buildStateInit({
+            contr: TONTokenWallet,
+            varInit: {
+                root_address: root_address,
+                code: code,
+                wallet_public_key: recipient_public_key,
+                owner_address: recipient_address
+            },
+            pubkey: recipient_public_key,
+            code: code
+        });
+
+        address to = address(tvm.hash(stateInit));
+
+        if(deploy_grams > 0) {
+            tvm.deploy(stateInit, tvm.encodeBody(TONTokenWallet), deploy_grams, address(this).wid);
+        }
+
+        if (owner_address.value != 0 ) {
+            balance -= tokens;
+            ITONTokenWallet(to).internalTransfer{ value: 0, flag: 128, bounce: true }(
+                tokens,
+                wallet_public_key,
+                owner_address,
+                owner_address,
+                notify_receiver,
+                payload
+            );
+        } else {
+            balance -= tokens;
+            ITONTokenWallet(to).internalTransfer{ value: transfer_grams, bounce: true }(
+                tokens,
+                wallet_public_key,
+                owner_address,
+                address(this),
+                notify_receiver,
+                payload
+            );
         }
     }
 
@@ -322,7 +411,7 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
             tvm.rawReserve(math.max(target_gas_balance, address(this).balance - msg.value), 2);
             balance -= tokens;
             IBurnableTokenRootContract(root_address)
-                .tokensBurned{ value: 0, flag: 128 }(
+                .tokensBurned{ value: 0, flag: 128, bounce: true }(
                     tokens,
                     wallet_public_key,
                     owner_address,
@@ -333,7 +422,7 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
             tvm.accept();
             balance -= tokens;
             IBurnableTokenRootContract(root_address)
-                .tokensBurned{ value: grams }(
+                .tokensBurned{ value: grams, bounce: true }(
                     tokens,
                     wallet_public_key,
                     owner_address,
@@ -356,7 +445,7 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
         balance -= tokens;
 
         IBurnableTokenRootContract(root_address)
-            .tokensBurned{ value: 0, flag: 128 }(
+            .tokensBurned{ value: 0, flag: 128, bounce: true }(
                 tokens,
                 wallet_public_key,
                 owner_address,
@@ -406,7 +495,7 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
     }
 
     function isExternalOwner() private inline view returns (bool) {
-        return wallet_public_key != 0 && wallet_public_key == tvm.pubkey();
+        return wallet_public_key != 0 && wallet_public_key == msg.pubkey();
     }
 
     function getExpectedAddress(uint256 wallet_public_key_, address owner_address_) private inline view returns (address)  {
@@ -431,6 +520,16 @@ contract TONTokenWallet is ITONTokenWallet, ITONTokenWalletWithNotifiableTransfe
         uint32 functionId = body.decode(uint32);
         if (functionId == tvm.functionId(ITONTokenWallet.internalTransfer)) {
             balance += body.decode(uint128);
+            if (owner_address.value != 0) {
+                tvm.rawReserve(math.max(target_gas_balance, address(this).balance - msg.value), 2);
+                owner_address.transfer({ value: 0, flag: 128 });
+            }   
+        } else if (functionId == tvm.functionId(IBurnableTokenRootContract.tokensBurned)) {
+            balance += body.decode(uint128);
+            if (owner_address.value != 0) {
+                tvm.rawReserve(math.max(target_gas_balance, address(this).balance - msg.value), 2);
+                owner_address.transfer({ value: 0, flag: 128 });
+            }
         }
     }
 
