@@ -11,6 +11,9 @@ contract Relayer is AccessCard {
     
     address bridgeAddress;
 
+    uint8 error_unsuitable_role = 121;
+    uint8 error_invalid_choice  = 122;
+
     constructor (
         address _accessControllerAddress,
         uint256 _myPublicKey,
@@ -25,13 +28,13 @@ contract Relayer is AccessCard {
     }
 
     function bridgeSetHandler(bytes32 messageType, address handlerAddress) onlyOwner external view {
-        require(myRole == 2 || myRole == 1, 101);
+        require(myRole == 2 || myRole == 1, error_unsuitable_role);
         tvm.accept();
         IBridge(bridgeAddress).adminSetHandler{bounce:true, value:200000000}(messageType, handlerAddress, tvm.pubkey());
     }
 
     function voteThroughBridge(uint8 choice, uint8 chainId, bytes32 messageType, uint64 nonce, TvmCell data) onlyOwner external view {
-        require(choice == 0 || choice == 1);
+        require(choice == 0 || choice == 1, error_invalid_choice);
         tvm.accept();
         IBridge(bridgeAddress).relayerVoteForProposal{bounce:true, value:400000000}(choice, chainId, messageType, nonce, data, tvm.pubkey());
     }

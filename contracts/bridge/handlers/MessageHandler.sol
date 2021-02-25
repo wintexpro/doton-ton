@@ -21,7 +21,7 @@ contract MessageHandler is AbstractProposalHandler {
     }
 
     function receiveMessage(uint8 chainId, uint64 nonce, bytes32 messageType, bytes32 data) external pure {
-        require (msg.sender.value == address(this).value);
+        require (msg.sender.value == address(this).value, 111);
         emit ProposalExecuted(chainId, nonce, messageType, data);
     }
     

@@ -7,6 +7,8 @@ contract AbstractProposalHandler {
     address bridgeVoteControllerAddress;
     uint256 bridgeVoteControllerPubKey;
 
+    uint8 error_invalid_proposal = 101;
+
     modifier isValidProposal(uint256 proposalPubKey, uint8 chainId, uint64 nonce, TvmCell data) {
         TvmCell proposalStateInit = tvm.buildStateInit({
             code: proposalCode,
@@ -19,7 +21,7 @@ contract AbstractProposalHandler {
                 data: data
             }
         });
-        require (msg.sender.value == tvm.hash(proposalStateInit), 101);
+        require (msg.sender.value == tvm.hash(proposalStateInit), error_invalid_proposal);
         _;
     }
 

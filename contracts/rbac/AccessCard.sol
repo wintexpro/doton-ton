@@ -23,12 +23,23 @@ contract AccessCard {
     uint128 valueForChangeRole;
     uint128 valueForChangeSuperAdmin;
 
+    uint8 error_sender_must_be_an_admin_or_superadmin       = 101;
+    uint8 error_unsuitable_target_role                      = 102;
+    uint8 error_admin_can_not_grant_this_role               = 103;
+    uint8 error_incorrect_role                              = 104;
+    uint8 error_can_not_grant_role_for_himself              = 105;
+    uint8 error_superadmin_can_not_to_deactivate_himself    = 106;
+    uint8 error_sender_is_not_superadmin                    = 107;
+    uint8 error_is_not_my_owner                             = 108;
+    uint8 error_already_deactivated                         = 109;
+    uint8 error_invalid_wallet_init_state                   = 111;
+
     /*
      * Проверяет, что вызываемый текущим контрактом контракт имеет такой же init state
      */
     modifier isSameWallet(uint256 touchingPublicKey) {
         TvmCell sendersStateInit = tvm.insertPubkey(myInitState, touchingPublicKey);
-        require(msg.sender.value == tvm.hash(sendersStateInit), 111); // в msg.sender.value лежит вторая часть адреса отправителя
+        require(msg.sender.value == tvm.hash(sendersStateInit), error_invalid_wallet_init_state); // в msg.sender.value лежит вторая часть адреса отправителя
         _;
     }
 
@@ -36,7 +47,7 @@ contract AccessCard {
      * @dev Modifier that allows public function to accept external calls only from owner
      */
     modifier onlyOwner {
-        require(tvm.pubkey() == msg.pubkey(), 108);
+        require(tvm.pubkey() == msg.pubkey(), error_is_not_my_owner);
         _;
     }
 
@@ -44,7 +55,7 @@ contract AccessCard {
      * @dev Checks that role exists
      */
     modifier isRoleExists(uint8 role) {
-        require(role == SUPERADMIN || role == ADMIN || role == MODERATOR || role == USER,  104, 'Incorrect role');
+        require(role == SUPERADMIN || role == ADMIN || role == MODERATOR || role == USER,  error_incorrect_role, 'Incorrect role');
         _;
     }
 
@@ -85,7 +96,7 @@ contract AccessCard {
      * @dev Grant the first superadmin
      */
     function grantSuperAdmin() external {
-        require (msg.sender == accessControllerAddress, 107);
+        require (msg.sender == accessControllerAddress, error_sender_is_not_superadmin);
         myRole = SUPERADMIN;
     }
 
@@ -97,9 +108,9 @@ contract AccessCard {
      * @dev Grants `role` to `target`
      */
     function grantRole(uint8 role, address targetAddress) onlyOwner isRoleExists(role) public {
-        require(myRole == ADMIN || myRole == SUPERADMIN, 101, "Sender must be an admin or superadmin");
-        require(targetAddress != address(this),  105, "grantRole: Can not grant role for himself");
-        require(myRole != ADMIN || (role != ADMIN && role != SUPERADMIN), 103, "Admin can not grant this role");
+        require(myRole == ADMIN || myRole == SUPERADMIN, error_sender_must_be_an_admin_or_superadmin, "Sender must be an admin or superadmin");
+        require(targetAddress != address(this), error_can_not_grant_role_for_himself, "grantRole: Can not grant role for himself");
+        require(myRole != ADMIN || (role != ADMIN && role != SUPERADMIN), error_admin_can_not_grant_this_role, "Admin can not grant this role");
         tvm.accept();
 
         uint8 calledByHavingRole = myRole; // my role at the time of the call
@@ -114,7 +125,7 @@ contract AccessCard {
      * @dev Changes role for current AccessCard by another AccessCard
      */
     function changeRole(uint8 initiatorRole, uint8 role, uint256 touchingPublicKey) isSameWallet(touchingPublicKey) external {
-        require(initiatorRole != ADMIN || (myRole == USER || myRole == MODERATOR), 102, "Insuitable target role");
+        require(initiatorRole != ADMIN || (myRole == USER || myRole == MODERATOR), error_unsuitable_target_role, "Unsuitable target role");
         myRole = role;
         if (role == SUPERADMIN) {
             IAccessController(accessControllerAddress).changeSuperAdmin{bounce:true, value:valueForChangeSuperAdmin}(address(this), myPublicKey);
@@ -125,8 +136,8 @@ contract AccessCard {
      * @dev Deactivate yourself
      */
     function deactivateHimself() onlyOwner public {
-        require(myRole != USER, 109, 'Already deactivated');
-        require(myRole != SUPERADMIN,  106, "Superadmin can not to deactivate himself");
+        require(myRole != USER, error_already_deactivated, 'Already deactivated');
+        require(myRole != SUPERADMIN,  error_superadmin_can_not_to_deactivate_himself, "Superadmin can not to deactivate himself");
         tvm.accept();
         myRole = USER;
     }

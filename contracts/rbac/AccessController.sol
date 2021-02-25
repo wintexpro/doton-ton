@@ -12,9 +12,13 @@ contract AccessController {
     
     address superAdminAddress; // super-admin public key. Только один AccessCard может иметь роль superadmin.
 
+    uint8 error_superadmin_already_created      = 101;
+    uint8 error_is_not_my_owner                 = 102;
+    uint8 error_invalid_wallet_init_state       = 111;
+
     // Modifier that allows public function to accept external calls only from RelayNodeF.
     modifier onlyOwner {
-        require(tvm.pubkey() == msg.pubkey(), 102, 'Only for owners');
+        require(tvm.pubkey() == msg.pubkey(), error_is_not_my_owner, 'Only for owners');
         _;
     }
 
@@ -23,7 +27,7 @@ contract AccessController {
      */
     modifier isSameWallet(uint256 touchingPublicKey) {
         TvmCell sendersStateInit = tvm.insertPubkey(accessCardInitState, touchingPublicKey);
-        require(msg.sender.value == tvm.hash(sendersStateInit), 111); // в msg.sender.value лежит вторая часть адреса отправителя
+        require(msg.sender.value == tvm.hash(sendersStateInit), error_invalid_wallet_init_state); // в msg.sender.value лежит вторая часть адреса отправителя
         _;
     }
 
@@ -47,7 +51,7 @@ contract AccessController {
      * Grant the first superadmin
      */
     function grantSuperAdminRole(address accessCardAddress) onlyOwner external {
-        require(superAdminAddress == address(this), 101, 'Superadmin already created earler');
+        require(superAdminAddress == address(this), error_superadmin_already_created, 'Superadmin already created earler');
         tvm.accept();
 		superAdminAddress = accessCardAddress; // address(tvm.hash(stateInitWithKey));
         IAccessCard(accessCardAddress).grantSuperAdmin();

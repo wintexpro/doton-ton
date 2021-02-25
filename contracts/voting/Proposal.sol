@@ -18,6 +18,9 @@ contract Proposal {
     mapping (uint8 => uint256) votes;
     mapping (address => uint8) addressVotes;
 
+    uint8 error_wrong_sender    = 101;
+    uint8 error_already_voted   = 102;
+
     constructor (
         uint256 _publicKey,
         uint256 _votersAmount,
@@ -45,8 +48,8 @@ contract Proposal {
     }
 
     function voteByController(address voter, uint8 choice, bytes32 messageType, address handlerAddress) external {
-        require(msg.sender == voteControllerAddress);
-        require(!addressVotes.exists(voter));
+        require(msg.sender == voteControllerAddress, error_wrong_sender);
+        require(!addressVotes.exists(voter), error_already_voted);
         votes[choice]++;
         addressVotes[voter] = choice;
         if (votes[1] + votes[0] >= votersAmount) {
