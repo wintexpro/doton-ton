@@ -13,6 +13,8 @@ contract VoteController {
     // Proposal state
     uint256 proposalVotersAmount;
 
+    uint8 error_is_not_my_owner = 101;
+
     constructor (
         TvmCell _proposalCode,
         uint128 _deployInitialValue,
@@ -29,7 +31,7 @@ contract VoteController {
     }
 
     modifier onlyOwner {
-        require (msg.pubkey() == publicKey);
+        require (msg.pubkey() == publicKey, error_is_not_my_owner);
         _;
     }
     

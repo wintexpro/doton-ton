@@ -10,6 +10,9 @@ contract BridgeVoteController is VoteController {
 
     address bridgeAddress;
 
+    uint8 error_wrong_sender      = 111;
+    uint8 error_invalid_choice    = 112;
+
     constructor (
         TvmCell _proposalCode,
         uint128 _deployInitialValue,
@@ -28,8 +31,8 @@ contract BridgeVoteController is VoteController {
     }
 
     function voteByBridge(address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, TvmCell data) external {
-        require (msg.sender == bridgeAddress);
-        require(choice == 0 || choice == 1);
+        require (msg.sender == bridgeAddress, error_wrong_sender);
+        require(choice == 0 || choice == 1, error_invalid_choice);
         tvm.accept();
         // 2 calls (1 with error, 1 is ok)
         createProposal(chainId, nonce, data, choice, voter, handlerAddress, messageType);

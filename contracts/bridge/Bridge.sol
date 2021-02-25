@@ -11,6 +11,10 @@ contract Bridge {
     TvmCell relayerInitState;
     mapping (bytes32 => address) handlers; 
 
+    uint8 error_invalid_relayer                     = 101;
+    uint8 error_insufficient_value                  = 102;
+    uint8 error_handler_not_registred               = 103;
+
     constructor(TvmCell _relayerInitState, address _accessControllerAddress, address _voteControllerAddress) public {
         tvm.accept();
         relayerInitState = _relayerInitState;
@@ -20,7 +24,7 @@ contract Bridge {
 
     modifier isValidRelayer(uint256 relayerPublicKey) {
         TvmCell relayerInitStateWithPublicKey = tvm.insertPubkey(relayerInitState, relayerPublicKey);
-        require (msg.sender.value == tvm.hash(relayerInitStateWithPublicKey));
+        require (msg.sender.value == tvm.hash(relayerInitStateWithPublicKey), error_invalid_relayer);
         _;
     }
 
@@ -29,8 +33,8 @@ contract Bridge {
     }
 
     function relayerVoteForProposal(uint8 choice, uint8 chainId, bytes32 messageType, uint64 nonce, TvmCell data, uint256 relayerPubKey) isValidRelayer(relayerPubKey) external view {
-        require(msg.value >= 400000000); // TODO ???
-        require(handlers[messageType] != address(0));
+        require(msg.value >= 400000000, error_insufficient_value); // TODO ???
+        require(handlers[messageType] != address(0), error_handler_not_registred);
         IBridgeVoteController(voteControllerAddress).voteByBridge{bounce:true, value:350000000}(msg.sender, choice, chainId, messageType, handlers[messageType], nonce, data);
     }
 
