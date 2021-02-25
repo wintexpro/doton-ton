@@ -4,8 +4,8 @@ contract BurnedTokensHandler {
 
     address tip3RootAddress;
 
-    uint8 error_wrong_sender        = 101;
-    uint8 error_wrong_tokens_amount = 103;
+    uint8 error_wrong_sender            = 101;
+    uint8 error_wrong_decoded_amount    = 103;
 
     event Deposit(uint8 destinationChainID, bytes32 resourceID, uint64 depositNonce, uint128 amount, bytes32 recipient);
 
@@ -32,7 +32,7 @@ contract BurnedTokensHandler {
             uint128 _amount,
             uint256 _recipient
         ) = payload.toSlice().decode(uint32, uint8, uint256, uint64, uint128, uint256);
-        require(tokens == _amount, error_wrong_tokens_amount);
+        require(tokens == _amount, error_wrong_decoded_amount);
         address(this).transfer(100000000, false, 0, payload);
     }
 
