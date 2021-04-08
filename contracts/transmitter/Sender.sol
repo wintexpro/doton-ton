@@ -1,4 +1,4 @@
-pragma ton-solidity ^0.36.0;
+pragma ton-solidity ^0.40.0;
 
 interface IReceiver {
     function receiveData(bytes32 data, uint256 destinationChainId) external;

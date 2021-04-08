@@ -1,4 +1,4 @@
-pragma ton-solidity ^0.36.0;
+pragma ton-solidity ^0.40.0;
 
 import "../voting/VoteController.sol";
 
@@ -36,6 +36,6 @@ contract BridgeVoteController is VoteController {
         tvm.accept();
         // 2 calls (1 with error, 1 is ok)
         createProposal(chainId, nonce, data, choice, voter, handlerAddress, messageType);
-        IProposal(getProposalAddress(chainId, nonce, data)).voteByController{bounce:true, value:300000000}(voter, choice, messageType, handlerAddress);
+        IProposal(getProposalAddress(chainId, nonce, data)).voteByController{bounce:true, flag: 1, value:300000000}(voter, choice, messageType, handlerAddress);
     }
 }

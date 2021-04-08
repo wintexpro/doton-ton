@@ -1,4 +1,4 @@
-pragma ton-solidity ^0.36.0;
+pragma ton-solidity ^0.40.0;
 pragma AbiHeader expire;
 
 interface ITONTokenWalletWithNotifiableTransfers {

@@ -1,4 +1,4 @@
-pragma ton-solidity ^0.36.0;
+pragma ton-solidity ^0.40.0;
 
 interface IAccessController {
     function changeSuperAdmin(address newSuperAdminAddress, uint256 myPublicKey) external;
@@ -118,7 +118,7 @@ contract AccessCard {
             calledByHavingRole = ADMIN;
             myRole = USER;
         }
-        IAccessCard(targetAddress).changeRole{bounce:true, value: valueForChangeRole}(calledByHavingRole, role, myPublicKey); 
+        IAccessCard(targetAddress).changeRole{bounce:true, flag: 1, value: valueForChangeRole}(calledByHavingRole, role, myPublicKey); 
     }
 
     /**
@@ -128,7 +128,7 @@ contract AccessCard {
         require(initiatorRole != ADMIN || (myRole == USER || myRole == MODERATOR), error_unsuitable_target_role, "Unsuitable target role");
         myRole = role;
         if (role == SUPERADMIN) {
-            IAccessController(accessControllerAddress).changeSuperAdmin{bounce:true, value:valueForChangeSuperAdmin}(address(this), myPublicKey);
+            IAccessController(accessControllerAddress).changeSuperAdmin{bounce:true, flag: 1, value:valueForChangeSuperAdmin}(address(this), myPublicKey);
         }
     }
 
