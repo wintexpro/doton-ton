@@ -8,15 +8,13 @@ contract MessageHandler is AbstractProposalHandler {
     
     constructor (
         TvmCell _proposalCode,
-        address _bridgeVoteControllerAddress,
-        uint256 _bridgeVoteControllerPubKey
+        uint256 _epochControllerPubKey
     ) AbstractProposalHandler (
         _proposalCode,
-        _bridgeVoteControllerAddress,
-        _bridgeVoteControllerPubKey
+        _epochControllerPubKey
     ) public {}
 
-    function executeProposal(uint256 proposalPubKey, uint8 chainId, uint64 nonce, bytes32 messageType, TvmCell data) isValidProposal(proposalPubKey, chainId, nonce, data) external view override {
+    function executeProposal(address epochAddress, uint8 chainId, uint64 nonce, bytes32 messageType, TvmCell data) isValidProposal(epochAddress, chainId, nonce, data) external view override {
         address(this).transfer(100000000, false, 0, data);
     }
 

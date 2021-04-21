@@ -3,8 +3,9 @@ const fs = require('fs')
 const path = require('path')
 const toHex = require('../helper').toHex
 const crypto = require('crypto')
+const EdDSA = require('elliptic').eddsa
 
-describe('Bridge. Some full and direct.', function () {
+describe('Bridge.e2e', function () {
   const zeroAddress = '0:0000000000000000000000000000000000000000000000000000000000000000'
   before(async function () {
     console.log('Start..')
@@ -15,11 +16,14 @@ describe('Bridge. Some full and direct.', function () {
   async function deployAndPrepareBridgeComponents (isOwnerOfT3RootInternal = true) {
     const manager = new Manager()
     await manager.createClient(['http://localhost:80/graphql'])
-    // load proposal only for getting CODE for deploy another components
-    const proposalKeys = await manager.createKeysAndReturn()
+    // load proposal and epoch only for getting CODE for deploy another components
     await manager.loadContract(
       path.join(__dirname, '../../build/Proposal.tvc'),
       path.join(__dirname, '../../build/Proposal.abi.json')
+    )
+    await manager.loadContract(
+      path.join(__dirname, '../../build/Epoch.tvc'),
+      path.join(__dirname, '../../build/Epoch.abi.json')
     )
     // load and deploy access controller
     const accessControllerKeys = await manager.createKeysAndReturn()
@@ -40,19 +44,21 @@ describe('Bridge. Some full and direct.', function () {
       { contractName: 'b', keys: bridgeKeys }
     )
     // load and deploy bridge vote controller
-    const bridgeVoteControllerKeys = await manager.createKeysAndReturn()
+    const epochControllerKeys = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../build/BridgeVoteController.tvc'),
-      path.join(__dirname, '../../build/BridgeVoteController.abi.json'),
-      { contractName: 'bvc', keys: bridgeVoteControllerKeys }
+      path.join(__dirname, '../../build/EpochController.tvc'),
+      path.join(__dirname, '../../build/EpochController.abi.json'),
+      { contractName: 'bvc', keys: epochControllerKeys }
     )
     await manager.contracts.bvc.deployContract({
       _proposalCode: (await manager.client.contracts.getCodeFromImage({ imageBase64: manager.contracts.Proposal.contractPackage.imageBase64 })).codeBase64,
+      _epochCode: (await manager.client.contracts.getCodeFromImage({ imageBase64: manager.contracts.Epoch.contractPackage.imageBase64 })).codeBase64,
       _deployInitialValue: 2000000000,
-      _publicKey: '0x' + bridgeVoteControllerKeys.public,
-      _proposalPublicKey: '0x' + proposalKeys.public,
-      _proposalVotersAmount: 2,
-      _bridgeAddress: await manager.contracts.b.futureAddress()
+      _publicKey: '0x' + epochControllerKeys.public,
+      _proposalVotersAmount: 1,
+      _bridgeAddress: await manager.contracts.b.futureAddress(),
+      _firstEraDuration: 1,
+      _secondEraDuration: 3600000
     })
     // load valid relayers
     const firstRelayerKeys = await manager.createKeysAndReturn()
@@ -82,8 +88,7 @@ describe('Bridge. Some full and direct.', function () {
     )
     await manager.contracts.h.deployContract({
       _proposalCode: (await manager.client.contracts.getCodeFromImage({ imageBase64: manager.contracts.Proposal.contractPackage.imageBase64 })).codeBase64,
-      _bridgeVoteControllerAddress: manager.contracts.bvc.address,
-      _bridgeVoteControllerPubKey: '0x' + bridgeVoteControllerKeys.public
+      _epochControllerPubKey: '0x' + epochControllerKeys.public
     })
     // load tip3 handler
     const tip3handlerKeys = await manager.createKeysAndReturn()
@@ -130,8 +135,7 @@ describe('Bridge. Some full and direct.', function () {
     // deploy tip3 handler
     await manager.contracts.th.deployContract({
       _proposalCode: (await manager.client.contracts.getCodeFromImage({ imageBase64: manager.contracts.Proposal.contractPackage.imageBase64 })).codeBase64,
-      _bridgeVoteControllerAddress: manager.contracts.bvc.address,
-      _bridgeVoteControllerPubKey: '0x' + bridgeVoteControllerKeys.public,
+      _epochControllerPubKey: '0x' + epochControllerKeys.public,
       _tip3RootAddress: manager.contracts.tip3root.address
     })
     // load and deploy burned tokens handler
@@ -190,7 +194,7 @@ describe('Bridge. Some full and direct.', function () {
     return manager
   }
 
-  it('allin: positive for relayers dot-ton', async function () {
+  it('e2e: DOT-TON 1 VOTE (silly)', async function () {
     const manager = await deployAndPrepareBridgeComponents()
     // calculate encoded granting tip3 message body as a data
     const runBody = await manager.client.contracts.createRunBody({
@@ -214,29 +218,48 @@ describe('Bridge. Some full and direct.', function () {
     const nonce = 1
     const data = runBody.bodyBase64
     // First vote is for creating a Proposal smart contract
+    const epochAddress = (await manager.contracts.bvc.runLocal(
+      'getEpochAddress',
+      { number: 1 }
+    )).output.epoch
+    const publicRandomness = (await manager.contracts.bvc.runLocal(
+      'getPublicRandomness',
+      { }
+    )).output.randomness
+    console.log('Epoch Address: ', epochAddress)
+    console.log('Public Randomness: ', publicRandomness)
+    const ec = new EdDSA('ed25519')
+    const key1 = ec.keyFromSecret(crypto.randomBytes(32))
+    const signature1 = key1.sign(publicRandomness.substr(2)).toHex()
+    await manager.contracts.r1.runContract(
+      'signUpForEpoch',
+      {
+        epochAddress,
+        signHighPart: '0x' + signature1.substr(0, 64),
+        signLowPart: '0x' + signature1.substr(64, 128),
+        pubkey: '0x' + key1.getPublic('hex')
+      },
+      manager.contracts.r1.keys
+    )
+    // next vote is only vote (with no contract deployment)
+    await new Promise(resolve => setTimeout(resolve, 1000))
     const beforeAccountsCount = await manager.client.queries.getAccountsCount()
     await manager.contracts.r1.runContract(
       'voteThroughBridge',
-      { choice: 1, chainId: chainId, messageType: toHex('tip3'), nonce: nonce, data: data },
+      { epochNumber: 1, choice: 1, chainId: chainId, messageType: toHex('tip3'), nonce: nonce, data: data },
       manager.contracts.r1.keys
     )
     const afterAccountsCount = await manager.client.queries.getAccountsCount()
     assert.equal(beforeAccountsCount, afterAccountsCount - 1)
-    // we need to save address for future getters run
-    const proposalAddress = (await manager.contracts.bvc.runLocal(
-      'getProposalAddress',
-      { chainId, nonce: nonce, data: data }
-    )).output.proposal
-    console.log('Proposal Address: ', proposalAddress)
-    // next vote is only vote (with no contract deployment)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    await manager.contracts.r2.runContract(
-      'voteThroughBridge',
-      { choice: 1, chainId: chainId, messageType: toHex('tip3'), nonce: nonce, data: data },
-      manager.contracts.r2.keys
-    )
-    assert.equal(afterAccountsCount, await manager.client.queries.getAccountsCount())
-    // Proposal results checking
+    const proposalAddress = (await manager.client.contracts.runLocal({
+      address: epochAddress,
+      functionName: 'getProposalAddress',
+      abi: manager.contracts.Epoch.contractPackage.abi,
+      input: {
+        chainId, nonce: nonce, data: data
+      }
+    })).output.proposal
+    console.log(proposalAddress)
     await new Promise(resolve => setTimeout(resolve, 5000))
     const proposalYesVotes = (await manager.client.contracts.runLocal({
       address: proposalAddress,
@@ -244,7 +267,7 @@ describe('Bridge. Some full and direct.', function () {
       abi: manager.contracts.Proposal.contractPackage.abi,
       input: {}
     })).output.yesVotes
-    assert.equal(2, parseInt(proposalYesVotes, 16))
+    assert.equal(1, parseInt(proposalYesVotes, 16))
     // assert.equal(1, parseInt(proposalYesVotes, 16))
     await new Promise(resolve => setTimeout(resolve, 5000))
     const tokenBalanceAfter = (await manager.client.contracts.runLocal({
@@ -256,7 +279,7 @@ describe('Bridge. Some full and direct.', function () {
     assert.equal(parseInt(tokenBalanceBefore, 16) + 1, parseInt(tokenBalanceAfter, 16))
   })
 
-  it('allin: positive for relayers ton-dot', async function () {
+  it('e2e: TON-DOT 2 VOTE (full)', async function () {
     const manager = await deployAndPrepareBridgeComponents(false)
     const payloadParams = {
       destinationChainID: '0x1',

@@ -8,15 +8,26 @@
 				{"name":"_proposalCode","type":"cell"},
 				{"name":"_deployInitialValue","type":"uint128"},
 				{"name":"_publicKey","type":"uint256"},
-				{"name":"_proposalPublicKey","type":"uint256"},
 				{"name":"_proposalVotersAmount","type":"uint256"},
-				{"name":"_bridgeAddress","type":"address"}
+				{"name":"_firstEraDuration","type":"uint32"},
+				{"name":"_secondEraDuration","type":"uint32"},
+				{"name":"_publicRandomness","type":"uint256"}
 			],
 			"outputs": [
 			]
 		},
 		{
-			"name": "voteByBridge",
+			"name": "signup",
+			"inputs": [
+				{"name":"signHighPart","type":"uint256"},
+				{"name":"signLowPart","type":"uint256"},
+				{"name":"pubkey","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "voteByEpochController",
 			"inputs": [
 				{"name":"voter","type":"address"},
 				{"name":"choice","type":"uint8"},
@@ -27,6 +38,15 @@
 				{"name":"data","type":"cell"}
 			],
 			"outputs": [
+			]
+		},
+		{
+			"name": "isChoosen",
+			"inputs": [
+				{"name":"relayer","type":"address"}
+			],
+			"outputs": [
+				{"name":"value0","type":"bool"}
 			]
 		},
 		{
@@ -74,6 +94,8 @@
 		}
 	],
 	"data": [
+		{"key":1,"name":"number","type":"uint64"},
+		{"key":2,"name":"voteControllerAddress","type":"address"}
 	],
 	"events": [
 	]

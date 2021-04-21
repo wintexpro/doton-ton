@@ -4,7 +4,11 @@ import "../rbac/AccessCard.sol";
 
 interface IBridge {
     function adminSetHandler(bytes32 messageType, address handlerAddress, uint256 relayerPubKey) external;
-    function relayerVoteForProposal(uint8 choice, uint8 chainId, bytes32 messageType, uint64 nonce, TvmCell data, uint256 relayerPubKey) external;
+    function relayerVoteForProposal(uint64 epochNumber, uint8 choice, uint8 chainId, bytes32 messageType, uint64 nonce, TvmCell data, uint256 relayerPubKey) external;
+}
+
+interface IEpoch {
+    function signup(uint256 signHighPart, uint256 signLowPart, uint256 pubkey) external;
 }
 
 contract Relayer is AccessCard {
@@ -33,9 +37,14 @@ contract Relayer is AccessCard {
         IBridge(bridgeAddress).adminSetHandler{bounce:true, flag: 1, value:200000000}(messageType, handlerAddress, tvm.pubkey());
     }
 
-    function voteThroughBridge(uint8 choice, uint8 chainId, bytes32 messageType, uint64 nonce, TvmCell data) onlyOwner external view {
+    function voteThroughBridge(uint64 epochNumber, uint8 choice, uint8 chainId, bytes32 messageType, uint64 nonce, TvmCell data) onlyOwner external view {
         require(choice == 0 || choice == 1, error_invalid_choice);
         tvm.accept();
-        IBridge(bridgeAddress).relayerVoteForProposal{bounce:true, flag: 1, value:400000000}(choice, chainId, messageType, nonce, data, tvm.pubkey());
+        IBridge(bridgeAddress).relayerVoteForProposal{bounce:true, flag: 1, value:400000000}(epochNumber, choice, chainId, messageType, nonce, data, tvm.pubkey());
+    }
+
+    function signUpForEpoch(address epochAddress, uint256 signHighPart, uint256 signLowPart, uint256 pubkey) onlyOwner external view {
+        tvm.accept();
+        IEpoch(epochAddress).signup{bounce:true, flag: 1, value:400000000}(signHighPart, signLowPart, pubkey);
     }
 }

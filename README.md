@@ -1,6 +1,6 @@
 # DOTON TON Smart contracts
 
-DOTON uses Solidity smart contracts to enable transfers to and from TVM compatible chains. These contracts consist of a core bridge contracts: Bridge, BridgeVoteController, Proposal, Handler. As a source chain of transfer flow, ton implementation has Sender and Receiver contracts.
+DOTON uses Solidity smart contracts to enable transfers to and from TVM compatible chains. These contracts consist of a core bridge contracts: Bridge, EpochController, Proposal, Handler. As a source chain of transfer flow, ton implementation has Sender and Receiver contracts.
 
 ## Solidity contract workflow
 

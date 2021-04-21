@@ -41,16 +41,21 @@ cd "$root"
 
 # bridge
 cd ./contracts/bridge
+## Epoch
+$solcExec Epoch.sol
+EpochLinkCommand=`tvm_linker compile Epoch.code --abi-json Epoch.abi.json`
+EpochLinkName=`echo $EpochLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
+mv $EpochLinkName Epoch.tvc
 ## Bridge
 $solcExec Bridge.sol
 BridgeLinkCommand=`tvm_linker compile Bridge.code --abi-json Bridge.abi.json`
 BridgeLinkName=`echo $BridgeLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
 mv $BridgeLinkName Bridge.tvc
-## BridgeVoteController
-$solcExec BridgeVoteController.sol
-BridgeVoteControllerLinkCommand=`tvm_linker compile BridgeVoteController.code --abi-json BridgeVoteController.abi.json`
-BridgeVoteControllerLinkName=`echo $BridgeVoteControllerLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
-mv $BridgeVoteControllerLinkName BridgeVoteController.tvc
+## EpochController
+$solcExec EpochController.sol
+EpochControllerLinkCommand=`tvm_linker compile EpochController.code --abi-json EpochController.abi.json`
+EpochControllerLinkName=`echo $EpochControllerLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
+mv $EpochControllerLinkName EpochController.tvc
 ## Relayer
 $solcExec Relayer.sol
 RelayerLinkCommand=`tvm_linker compile Relayer.code --abi-json Relayer.abi.json`

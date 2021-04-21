@@ -19,14 +19,12 @@ contract VoteController {
         TvmCell _proposalCode,
         uint128 _deployInitialValue,
         uint256 _publicKey,
-        uint256 _proposalPublicKey,
         uint256 _proposalVotersAmount
     ) public {
         tvm.accept();
         proposalCode = _proposalCode;
         deployInitialValue = _deployInitialValue;
         publicKey = _publicKey;
-        proposalPublicKey = _proposalPublicKey;
         proposalVotersAmount = _proposalVotersAmount;
     }
 
@@ -56,7 +54,6 @@ contract VoteController {
                 data: data
             }
         } (
-            proposalPublicKey,
             proposalVotersAmount,
             initializerChoice,
             initializerAddress,

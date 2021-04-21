@@ -1,7 +1,7 @@
 pragma ton-solidity ^0.40.0;
 
 interface IHandler {
-    function executeProposal(uint256 proposalPubKey, uint8 chainId, uint64 nonce, bytes32 messageType, TvmCell data) external;
+    function executeProposal(address epochAddress, uint8 chainId, uint64 nonce, bytes32 messageType, TvmCell data) external;
 }
 
 contract Proposal {
@@ -11,31 +11,30 @@ contract Proposal {
     TvmCell static data;
 
     // Proposal info state
-    uint256 publicKey;
     uint256 votersAmount;
     
     // Proposal voting state
     mapping (uint8 => uint256) votes;
     mapping (address => uint8) addressVotes;
 
-    uint8 error_wrong_sender    = 101;
-    uint8 error_already_voted   = 102;
+    uint8 error_wrong_sender          = 101;
+    uint8 error_already_voted         = 102;
+    uint8 error_called_not_by_creator = 103;
 
     constructor (
-        uint256 _publicKey,
         uint256 _votersAmount,
         uint8 initializerChoice,
         address initializerAddress,
         address handlerAddress,
         bytes32 messageType
     ) public {
+        require(voteControllerAddress == msg.sender, 103);
         tvm.accept();
-        publicKey = _publicKey;
         votersAmount = _votersAmount;
         votes[initializerChoice]++;
         addressVotes[initializerAddress] = initializerChoice;
         if (_votersAmount == 1) {
-            IHandler(handlerAddress).executeProposal{bounce:false, value:200000000}(tvm.pubkey(), chainId, nonce, messageType, data);
+            IHandler(handlerAddress).executeProposal{bounce:false, value:200000000}(voteControllerAddress, chainId, nonce, messageType, data);
         }
     }
 
@@ -53,9 +52,8 @@ contract Proposal {
         votes[choice]++;
         addressVotes[voter] = choice;
         if (votes[1] + votes[0] >= votersAmount) {
-            IHandler(handlerAddress).executeProposal{bounce:false, value:200000000}(tvm.pubkey(), chainId, nonce, messageType, data);
+            IHandler(handlerAddress).executeProposal{bounce:false, value:200000000}(voteControllerAddress, chainId, nonce, messageType, data);
         }
     }
 
- 
 }

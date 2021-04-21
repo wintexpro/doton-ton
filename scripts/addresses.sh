@@ -2,9 +2,9 @@
 accessControllerCommand=`tonos-cli genaddr --setkey ./keys/AccessController.keys.json ./rbac/AccessController.tvc ./rbac/AccessController.abi.json`
 accessControllerAddress=`echo $accessControllerCommand | grep -o -P '(?<=Raw address: ).*(?= t)'`
 echo "Access Controller address: $accessControllerAddress"
-bridgeVoteControllerCommand=`tonos-cli genaddr --setkey ./keys/BridgeVoteController.keys.json ./bridge/BridgeVoteController.tvc ./bridge/BridgeVoteController.abi.json`
-bridgeVoteControllerAddress=`echo $bridgeVoteControllerCommand | grep -o -P '(?<=Raw address: ).*(?= t)'`
-echo "Bridge Vote Controller address: $bridgeVoteControllerAddress"
+epochControllerCommand=`tonos-cli genaddr --setkey ./keys/EpochController.keys.json ./bridge/EpochController.tvc ./bridge/EpochController.abi.json`
+epochControllerAddress=`echo $epochControllerCommand | grep -o -P '(?<=Raw address: ).*(?= t)'`
+echo "Bridge Vote Controller address: $epochControllerAddress"
 bridgeCommand=`tonos-cli genaddr --setkey ./keys/Bridge.keys.json ./bridge/Bridge.tvc ./bridge/Bridge.abi.json`
 bridgeAddress=`echo $bridgeCommand | grep -o -P '(?<=Raw address: ).*(?= t)'`
 echo "Bridge address: $bridgeAddress"

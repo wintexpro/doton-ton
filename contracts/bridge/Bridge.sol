@@ -1,7 +1,7 @@
 pragma ton-solidity ^0.40.0;
 
-interface IBridgeVoteController {
-    function voteByBridge(address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, TvmCell data) external;
+interface IEpochController {
+    function voteByBridge(uint64 epochNumber, address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, TvmCell data) external;
 }
 
 contract Bridge {
@@ -32,10 +32,10 @@ contract Bridge {
         handlers[messageType] = handlerAddress;
     }
 
-    function relayerVoteForProposal(uint8 choice, uint8 chainId, bytes32 messageType, uint64 nonce, TvmCell data, uint256 relayerPubKey) isValidRelayer(relayerPubKey) external view {
+    function relayerVoteForProposal(uint64 epochNumber, uint8 choice, uint8 chainId, bytes32 messageType, uint64 nonce, TvmCell data, uint256 relayerPubKey) isValidRelayer(relayerPubKey) external view {
         require(msg.value >= 400000000, error_insufficient_value); // TODO ???
         require(handlers[messageType] != address(0), error_handler_not_registred);
-        IBridgeVoteController(voteControllerAddress).voteByBridge{bounce:true, flag: 1, value:350000000}(msg.sender, choice, chainId, messageType, handlers[messageType], nonce, data);
+        IEpochController(voteControllerAddress).voteByBridge{bounce:true, flag: 1, value:350000000}(epochNumber, msg.sender, choice, chainId, messageType, handlers[messageType], nonce, data);
     }
 
     function getHandlerAddressByMessageType(bytes32 messageType) external view returns (address) {
