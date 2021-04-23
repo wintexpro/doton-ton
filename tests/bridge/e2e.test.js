@@ -13,7 +13,7 @@ describe('Bridge.e2e', function () {
     await new Promise(resolve => setTimeout(resolve, 5000))
   })
 
-  async function deployAndPrepareBridgeComponents (isOwnerOfT3RootInternal = true) {
+  async function deployAndPrepareBridgeComponents (firstEraDuration, secondEraDuration, votersAmount = 2, isOwnerOfT3RootInternal = true) {
     const manager = new Manager()
     await manager.createClient(['http://localhost:80/graphql'])
     // load proposal and epoch only for getting CODE for deploy another components
@@ -55,10 +55,10 @@ describe('Bridge.e2e', function () {
       _epochCode: (await manager.client.contracts.getCodeFromImage({ imageBase64: manager.contracts.Epoch.contractPackage.imageBase64 })).codeBase64,
       _deployInitialValue: 2000000000,
       _publicKey: '0x' + epochControllerKeys.public,
-      _proposalVotersAmount: 1,
+      _proposalVotersAmount: votersAmount,
       _bridgeAddress: await manager.contracts.b.futureAddress(),
-      _firstEraDuration: 1,
-      _secondEraDuration: 3600000
+      _firstEraDuration: firstEraDuration,
+      _secondEraDuration: secondEraDuration
     })
     // load valid relayers
     const firstRelayerKeys = await manager.createKeysAndReturn()
@@ -195,7 +195,7 @@ describe('Bridge.e2e', function () {
   }
 
   it('e2e: DOT-TON 1 VOTE (silly)', async function () {
-    const manager = await deployAndPrepareBridgeComponents()
+    const manager = await deployAndPrepareBridgeComponents(1, 3600000, 1)
     // calculate encoded granting tip3 message body as a data
     const runBody = await manager.client.contracts.createRunBody({
       abi: manager.contracts.tip3root.contractPackage.abi,
@@ -223,14 +223,16 @@ describe('Bridge.e2e', function () {
       { number: 1 }
     )).output.epoch
     const publicRandomness = (await manager.contracts.bvc.runLocal(
-      'getPublicRandomness',
+      'publicRandomness',
       { }
-    )).output.randomness
+    )).output.publicRandomness
     console.log('Epoch Address: ', epochAddress)
     console.log('Public Randomness: ', publicRandomness)
     const ec = new EdDSA('ed25519')
     const key1 = ec.keyFromSecret(crypto.randomBytes(32))
     const signature1 = key1.sign(publicRandomness.substr(2)).toHex()
+    // first era of this test for 1 ms. so signup must execute new epoch deployment
+    const beforeSignUpAccountsCount = await manager.client.queries.getAccountsCount()
     await manager.contracts.r1.runContract(
       'signUpForEpoch',
       {
@@ -241,16 +243,23 @@ describe('Bridge.e2e', function () {
       },
       manager.contracts.r1.keys
     )
-    // next vote is only vote (with no contract deployment)
     await new Promise(resolve => setTimeout(resolve, 1000))
-    const beforeAccountsCount = await manager.client.queries.getAccountsCount()
+    const afterSignUpAccountsCount = await manager.client.queries.getAccountsCount()
+    assert.equal(beforeSignUpAccountsCount, afterSignUpAccountsCount - 1)
+    const newPublicRandomness = (await manager.contracts.bvc.runLocal(
+      'publicRandomness',
+      { }
+    )).output.publicRandomness
+    assert.notEqual(publicRandomness, newPublicRandomness)
+    // vote with proposal contract deployment
+    const beforeVoteAccountsCount = await manager.client.queries.getAccountsCount()
     await manager.contracts.r1.runContract(
       'voteThroughBridge',
       { epochNumber: 1, choice: 1, chainId: chainId, messageType: toHex('tip3'), nonce: nonce, data: data },
       manager.contracts.r1.keys
     )
-    const afterAccountsCount = await manager.client.queries.getAccountsCount()
-    assert.equal(beforeAccountsCount, afterAccountsCount - 1)
+    const afterVoteAccountsCount = await manager.client.queries.getAccountsCount()
+    assert.equal(beforeVoteAccountsCount, afterVoteAccountsCount - 1)
     const proposalAddress = (await manager.client.contracts.runLocal({
       address: epochAddress,
       functionName: 'getProposalAddress',
@@ -259,7 +268,7 @@ describe('Bridge.e2e', function () {
         chainId, nonce: nonce, data: data
       }
     })).output.proposal
-    console.log(proposalAddress)
+    console.log('Proposal Address: ', proposalAddress)
     await new Promise(resolve => setTimeout(resolve, 5000))
     const proposalYesVotes = (await manager.client.contracts.runLocal({
       address: proposalAddress,
@@ -280,7 +289,7 @@ describe('Bridge.e2e', function () {
   })
 
   it('e2e: TON-DOT 2 VOTE (full)', async function () {
-    const manager = await deployAndPrepareBridgeComponents(false)
+    const manager = await deployAndPrepareBridgeComponents(1, 3600000, 2, false)
     const payloadParams = {
       destinationChainID: '0x1',
       resourceID: toHex('test'),
@@ -306,7 +315,7 @@ describe('Bridge.e2e', function () {
       abi: manager.contracts.tip3root.contractPackage.abi,
       input: { wallet_public_key_: '0x' + testWalletKeys.public, owner_address_: zeroAddress }
     })).output.value0
-    console.log('testWalletAddress: ', testWalletAddress)
+    console.log('Test Wallet Address: ', testWalletAddress)
     await manager.client.contracts.run({
       address: testWalletAddress,
       abi: manager.contracts.tip3w.contractPackage.abi,

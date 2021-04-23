@@ -27,14 +27,6 @@
 			]
 		},
 		{
-			"name": "getPublicRandomness",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"randomness","type":"uint256"}
-			]
-		},
-		{
 			"name": "voteByBridge",
 			"inputs": [
 				{"name":"epochNumber","type":"uint64"},
@@ -55,6 +47,38 @@
 				{"name":"newPublicrandomness","type":"uint256"}
 			],
 			"outputs": [
+			]
+		},
+		{
+			"name": "firstEraDuration",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"firstEraDuration","type":"uint32"}
+			]
+		},
+		{
+			"name": "secondEraDuration",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"secondEraDuration","type":"uint32"}
+			]
+		},
+		{
+			"name": "publicRandomness",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"publicRandomness","type":"uint256"}
+			]
+		},
+		{
+			"name": "currentEpochNumber",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"currentEpochNumber","type":"uint64"}
 			]
 		}
 	],

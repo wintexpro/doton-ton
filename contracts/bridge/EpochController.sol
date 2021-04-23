@@ -6,7 +6,7 @@ interface IEpoch {
     function voteByEpochController(address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, TvmCell data) external;
 }
 
-contract EpochController { // TODO: rename to EpochController
+contract EpochController {
 
     uint8 error_wrong_sender      = 111;
     uint8 error_invalid_choice    = 112;
@@ -15,14 +15,14 @@ contract EpochController { // TODO: rename to EpochController
     address bridgeAddress;
     TvmCell epochCode;
     TvmCell proposalCode;
-    uint64 currentEpochNumber  = 1;
-    uint256 publicRandomness;
     uint128 deployInitialValue;
     uint256 publicKey;
     uint256 proposalVotersAmount;
 
-    uint32 firstEraDuration;
-    uint32 secondEraDuration;
+    uint32 public firstEraDuration;
+    uint32 public secondEraDuration;
+    uint256 public publicRandomness;
+    uint64 public currentEpochNumber;
 
     constructor (
         TvmCell _epochCode,
@@ -43,6 +43,7 @@ contract EpochController { // TODO: rename to EpochController
         firstEraDuration = _firstEraDuration;
         secondEraDuration = _secondEraDuration;
         publicRandomness = rnd.next();
+        currentEpochNumber = 1;
         createEpoch(1, publicRandomness);
     }
 
@@ -81,10 +82,6 @@ contract EpochController { // TODO: rename to EpochController
         return address(tvm.hash(epochStateInit));
     }
 
-    function getPublicRandomness() public view returns (uint256 randomness) {
-        return publicRandomness;
-    }
-
     function voteByBridge(uint64 epochNumber, address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, TvmCell data) external {
         require (msg.sender == bridgeAddress, error_wrong_sender);
         require(choice == 0 || choice == 1, error_invalid_choice);
@@ -100,12 +97,4 @@ contract EpochController { // TODO: rename to EpochController
         currentEpochNumber++; // TODO: onBounce with reverse number?
     }
 
-    /* function voteByBridge(address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, TvmCell data) external {
-        require (msg.sender == bridgeAddress, error_wrong_sender);
-        require(choice == 0 || choice == 1, error_invalid_choice);
-        tvm.accept();
-        // 2 calls (1 with error, 1 is ok)
-        createProposal(chainId, nonce, data, choice, voter, handlerAddress, messageType);
-        IProposal(getProposalAddress(chainId, nonce, data)).voteByController{bounce:true, flag: 1, value:300000000}(voter, choice, messageType, handlerAddress);
-    }*/ 
 }
