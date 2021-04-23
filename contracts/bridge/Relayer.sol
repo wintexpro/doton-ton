@@ -8,7 +8,7 @@ interface IBridge {
 }
 
 interface IEpoch {
-    function signup(uint256 signHighPart, uint256 signLowPart, uint256 pubkey) external;
+    function signup(address registeringRelayer, uint256 signHighPart, uint256 signLowPart, uint256 pubkey) external;
 }
 
 contract Relayer is AccessCard {
@@ -45,6 +45,6 @@ contract Relayer is AccessCard {
 
     function signUpForEpoch(address epochAddress, uint256 signHighPart, uint256 signLowPart, uint256 pubkey) onlyOwner external view {
         tvm.accept();
-        IEpoch(epochAddress).signup{bounce:true, flag: 1, value:400000000}(signHighPart, signLowPart, pubkey);
+        IEpoch(epochAddress).signup{bounce:true, flag: 1, value:400000000}(address(this), signHighPart, signLowPart, pubkey);
     }
 }

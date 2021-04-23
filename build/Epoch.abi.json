@@ -19,6 +19,7 @@
 		{
 			"name": "signup",
 			"inputs": [
+				{"name":"registeringRelayer","type":"address"},
 				{"name":"signHighPart","type":"uint256"},
 				{"name":"signLowPart","type":"uint256"},
 				{"name":"pubkey","type":"uint256"}
@@ -90,6 +91,22 @@
 			],
 			"outputs": [
 				{"name":"proposal","type":"address"}
+			]
+		},
+		{
+			"name": "firstEraEndsAt",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"firstEraEndsAt","type":"uint32"}
+			]
+		},
+		{
+			"name": "secondEraEndsAt",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"secondEraEndsAt","type":"uint32"}
 			]
 		}
 	],

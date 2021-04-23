@@ -19,6 +19,7 @@ contract Epoch is VoteController {
     uint8 error_signature_already_provided = 103;
     uint8 error_wrong_sender               = 104;
     uint8 error_invalid_choice             = 105;
+    uint8 error_relayer_was_not_passed     = 106;
 
     struct Signature {
         uint256 sign_high_part;
@@ -30,8 +31,8 @@ contract Epoch is VoteController {
 
     uint256 randomness;
 
-    uint32 firstEraEndsAt;
-    uint32 secondEraEndsAt;
+    uint32 public firstEraEndsAt;
+    uint32 public secondEraEndsAt;
     uint32 proposalsAmount = 0;
     uint256 nextRandomness;
 
@@ -62,11 +63,11 @@ contract Epoch is VoteController {
         secondEraEndsAt = firstEraEndsAt + secondEraDuration;
     }
 
-    function signup(uint256 signHighPart, uint256 signLowPart, uint256 pubkey) external {
+    function signup(address registeringRelayer, uint256 signHighPart, uint256 signLowPart, uint256 pubkey) external {
         require(msg.createdAt < firstEraEndsAt || choosen_relayers.empty(), error_bad_era);
         require(tvm.checkSign(randomness, signHighPart, signLowPart, pubkey), error_bad_proof);
         require(!registered_relayers.exists(Signature(signHighPart, signLowPart)), error_signature_already_provided);
-        registered_relayers[Signature(signHighPart, signLowPart)] = msg.sender;
+        registered_relayers[Signature(signHighPart, signLowPart)] = registeringRelayer;
         TvmBuilder builder;
         builder.store(nextRandomness, signHighPart, signLowPart);
         nextRandomness = sha256(builder.toSlice());
@@ -85,8 +86,9 @@ contract Epoch is VoteController {
     }
 
     function voteByEpochController(address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, TvmCell data) external {
-        require (msg.sender == voteControllerAddress, error_wrong_sender);
+        require(msg.sender == voteControllerAddress, error_wrong_sender);
         require(choice == 0 || choice == 1, error_invalid_choice);
+        require(choosen_relayers.exists(voter), error_relayer_was_not_passed);
         tvm.accept();
         // 2 calls (1 with error, 1 is ok); If second era ends we should allow ONLY to vote for exists!
         if (msg.createdAt <= secondEraEndsAt) {

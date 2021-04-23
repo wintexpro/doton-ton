@@ -195,7 +195,7 @@ describe('Bridge.e2e', function () {
   }
 
   it('e2e: DOT-TON 1 VOTE (silly)', async function () {
-    const manager = await deployAndPrepareBridgeComponents(1, 3600000, 1)
+    const manager = await deployAndPrepareBridgeComponents(1, 60, 1)
     // calculate encoded granting tip3 message body as a data
     const runBody = await manager.client.contracts.createRunBody({
       abi: manager.contracts.tip3root.contractPackage.abi,
@@ -289,7 +289,7 @@ describe('Bridge.e2e', function () {
   })
 
   it('e2e: TON-DOT 2 VOTE (full)', async function () {
-    const manager = await deployAndPrepareBridgeComponents(1, 3600000, 2, false)
+    const manager = await deployAndPrepareBridgeComponents(1, 1, 2, false)
     const payloadParams = {
       destinationChainID: '0x1',
       resourceID: toHex('test'),
@@ -350,5 +350,182 @@ describe('Bridge.e2e', function () {
     assert.equal(payloadParams.destinationChainID, decodedBody.output.destinationChainID)
     assert.equal(payloadParams.recipient, decodedBody.output.recipient)
     assert.equal(payloadParams.resourceID, decodedBody.output.resourceID)
+  })
+
+  it('e2e: DOT-TON complicated (2 relayers, 2 votes, eras and epoch changing checking) ', async function () {
+    // WARNING!
+    // It's very complicate to pass timings :)
+    // I don't know if you can pass it with your PC
+    const manager = await deployAndPrepareBridgeComponents(30, 10, 2)
+    // calculate encoded granting tip3 message body as a data
+    const runBody = await manager.client.contracts.createRunBody({
+      abi: manager.contracts.tip3root.contractPackage.abi,
+      function: 'mint',
+      params: {
+        to: manager.contracts.tip3w.address,
+        tokens: 1
+      },
+      internal: true
+    })
+    // Proposal variables
+    const chainId = 12
+    const nonce = 1
+    const data = runBody.bodyBase64
+    // First vote is for creating a Proposal smart contract
+    const epochAddress = (await manager.contracts.bvc.runLocal(
+      'getEpochAddress',
+      { number: 1 }
+    )).output.epoch
+    const publicRandomness = (await manager.contracts.bvc.runLocal(
+      'publicRandomness',
+      { }
+    )).output.publicRandomness
+    console.log('Epoch Address: ', epochAddress)
+    console.log('Public Randomness: ', publicRandomness)
+    const ec = new EdDSA('ed25519')
+    const key1 = ec.keyFromSecret(crypto.randomBytes(32))
+    const signature1 = key1.sign(publicRandomness.substr(2)).toHex()
+    await manager.contracts.r1.runContract(
+      'signUpForEpoch',
+      {
+        epochAddress,
+        signHighPart: '0x' + signature1.substr(0, 64),
+        signLowPart: '0x' + signature1.substr(64, 128),
+        pubkey: '0x' + key1.getPublic('hex')
+      },
+      manager.contracts.r1.keys
+    )
+    const key2 = ec.keyFromSecret(crypto.randomBytes(32))
+    const signature2 = key2.sign(publicRandomness.substr(2)).toHex()
+    // we need to wait until can force
+    const secondSignupTime = (await manager.client.contracts.runLocal({
+      address: epochAddress,
+      functionName: 'firstEraEndsAt',
+      abi: manager.contracts.Epoch.contractPackage.abi,
+      input: {}
+    })).output.firstEraEndsAt
+    while (Date.now() / 1000 < parseInt(secondSignupTime)) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+    await manager.contracts.r2.runContract(
+      'signUpForEpoch',
+      {
+        epochAddress,
+        signHighPart: '0x' + signature2.substr(0, 64),
+        signLowPart: '0x' + signature2.substr(64, 128),
+        pubkey: '0x' + key2.getPublic('hex')
+      },
+      manager.contracts.r2.keys
+    )
+    // vote with proposal contract deployment
+    await manager.contracts.r1.runContract(
+      'voteThroughBridge',
+      { epochNumber: 1, choice: 1, chainId: chainId, messageType: toHex('tip3'), nonce: nonce, data: data },
+      manager.contracts.r1.keys
+    )
+    await new Promise(resolve => setTimeout(resolve, 10000))
+    // bad vote! this vote with another nonce - so it should create proposal, but epoch ends!
+    await manager.contracts.r2.runContract(
+      'voteThroughBridge',
+      { epochNumber: 1, choice: 1, chainId: chainId, messageType: toHex('tip3'), nonce: nonce + 1, data: data },
+      manager.contracts.r2.keys
+    )
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    // this proposal shouldn't exists
+    const badProposalAddress = (await manager.client.contracts.runLocal({
+      address: epochAddress,
+      functionName: 'getProposalAddress',
+      abi: manager.contracts.Epoch.contractPackage.abi,
+      input: {
+        chainId, nonce: nonce + 1, data: data
+      }
+    })).output.proposal
+    const badProposalChecking = await manager.client.queries.accounts.query({
+      filter: {
+        id: { eq: badProposalAddress }
+      },
+      result: 'balance'
+    })
+    assert.equal(badProposalChecking.length, 0)
+    // and just check for failed vote calling. ONLY 3 messages from epoch: first vote creation+vote (one failed by design) and new epoch message
+    const epochOutboundForBadProposal = await manager.client.queries.messages.query({
+      filter: {
+        src: { eq: epochAddress },
+        dst: { eq: badProposalAddress }
+      },
+      result: 'body dst_transaction { end_status_name }'
+    })
+    assert.equal(epochOutboundForBadProposal[0].dst_transaction.end_status_name, 'NonExist')
+    // BUT epoch should allow vote for already created proposal of ended era!
+    await manager.contracts.r2.runContract(
+      'voteThroughBridge',
+      { epochNumber: 1, choice: 1, chainId: chainId, messageType: toHex('tip3'), nonce: nonce, data: data },
+      manager.contracts.r2.keys
+    )
+    const proposalAddress = (await manager.client.contracts.runLocal({
+      address: epochAddress,
+      functionName: 'getProposalAddress',
+      abi: manager.contracts.Epoch.contractPackage.abi,
+      input: {
+        chainId, nonce: nonce, data: data
+      }
+    })).output.proposal
+    const epochOutboundForGoodProposal = await manager.client.queries.messages.query({
+      filter: {
+        src: { eq: epochAddress },
+        dst: { eq: proposalAddress }
+      },
+      result: 'body'
+    })
+    // 2 + 1 (creation+vote from r1 and vote from r2)
+    assert.equal(epochOutboundForGoodProposal.length, 3)
+    // just another check that proposal called handler
+    const proposalOutbound = await manager.client.queries.messages.query({
+      filter: {
+        src: { eq: proposalAddress },
+        dst: { eq: manager.contracts.th.address }
+      },
+      result: 'dst'
+    })
+    assert.equal(proposalOutbound.length, 1)
+    // Lets check existence of new deployed epoch
+    const newEpochAddress = (await manager.contracts.bvc.runLocal(
+      'getEpochAddress',
+      { number: 2 }
+    )).output.epoch
+    console.log('New Epoch Address: ', newEpochAddress)
+    const newEpochChecking = await manager.client.queries.accounts.query({
+      filter: {
+        id: { eq: newEpochAddress }
+      },
+      result: 'balance'
+    })
+    assert.equal(newEpochChecking.length, 1)
+    // lets signup j4f :) but we should take and sign new public randomness!
+    const newPublicRandomness = (await manager.contracts.bvc.runLocal(
+      'publicRandomness',
+      { }
+    )).output.publicRandomness
+    console.log('New Public Randomness: ', newPublicRandomness)
+    const key3 = ec.keyFromSecret(crypto.randomBytes(32))
+    const signature3 = key3.sign(newPublicRandomness.substr(2)).toHex()
+    await manager.contracts.r2.runContract(
+      'signUpForEpoch',
+      {
+        epochAddress: newEpochAddress,
+        signHighPart: '0x' + signature3.substr(0, 64),
+        signLowPart: '0x' + signature3.substr(64, 128),
+        pubkey: '0x' + key3.getPublic('hex')
+      },
+      manager.contracts.r2.keys
+    )
+    const newEraRigistrationMessage = await manager.client.queries.messages.query({
+      filter: {
+        src: { eq: manager.contracts.r2.address },
+        dst: { eq: newEpochAddress }
+      },
+      result: 'body dst_transaction { compute { success } }'
+    })
+    assert.equal(newEraRigistrationMessage[0].dst_transaction.compute.success, true)
   })
 })
