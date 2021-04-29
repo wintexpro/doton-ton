@@ -9,19 +9,19 @@ describe('VoteController', function () {
   let receiverKeys
 
   before(async function () {
-    await manager.createClient(['localhost/graphql'])
+    await manager.createClient(['http://localhost:80/graphql'])
     senderKeys = await manager.createKeysAndReturn()
     console.log('senderKeys', senderKeys)
     receiverKeys = await manager.createKeysAndReturn()
     console.log('receiverKeys', receiverKeys)
     await manager.loadContract(
-      path.join(__dirname, '../../transmitter/Sender.tvc'),
-      path.join(__dirname, '../../transmitter/Sender.abi.json'),
+      path.join(__dirname, '../../build/Sender.tvc'),
+      path.join(__dirname, '../../build/Sender.abi.json'),
       { contractName: 's', keys: senderKeys }
     )
     await manager.loadContract(
-      path.join(__dirname, '../../transmitter/Receiver.tvc'),
-      path.join(__dirname, '../../transmitter/Receiver.abi.json'),
+      path.join(__dirname, '../../build/Receiver.tvc'),
+      path.join(__dirname, '../../build/Receiver.abi.json'),
       { contractName: 'r', keys: receiverKeys }
     )
 
