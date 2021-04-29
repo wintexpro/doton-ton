@@ -670,6 +670,8 @@ describe('Bridge.e2e', function () {
     console.log('Epoch Address: ', epochAddress)
     console.log('Public Randomness: ', publicRandomness)
 
+    await signUpForEpoch(manager, 'r1', epochAddress, publicRandomness)
+
     // calculate encoded granting tip3 message body as a data
     const runBody = await manager.client.contracts.createRunBody({
       abi: manager.contracts.tip3root.contractPackage.abi,
@@ -702,6 +704,8 @@ describe('Bridge.e2e', function () {
       },
       result: 'body dst_transaction { compute { success, exit_code } }'
     })
+    assert.equal(epochOutboundForBadProposal.length, 2)
+    assert.equal(Boolean(epochOutboundForBadProposal.find(res => res.dst_transaction?.compute?.success === true)), true)
     assert.equal(
       Boolean(epochOutboundForBadProposal.find(
         res => res.dst_transaction?.compute?.success === false && res.dst_transaction?.compute?.exit_code === 106
@@ -769,7 +773,7 @@ describe('Bridge.e2e', function () {
         src: { eq: manager.contracts.r4.address },
         dst: { eq: epochAddress }
       },
-      result: 'body src_transaction { id, status, end_status_name } dst_transaction { id end_status_name compute { success, exit_code } }'
+      result: 'body dst_transaction { compute { success, exit_code } }'
     })
     assert.equal(eraRigistrationMessage[0].dst_transaction.compute.success, false)
     assert.equal(eraRigistrationMessage[0].dst_transaction.compute.exit_code, 102)
@@ -777,6 +781,123 @@ describe('Bridge.e2e', function () {
     // method 'isChosen' for fourth relayer should return false
     const isRelayer4Chosen = await isRelayerChoosen(manager, 'r4', epochAddress)
     assert.equal(isRelayer4Chosen.output.value0, false)
+  })
+
+  it('e2e: DOT-TON, attempt to signup twice with same signature (should throw error)', async function () {
+    const manager = await deployAndPrepareBridgeComponents(30, 10, 2)
+
+    const epochAddress = (await manager.contracts.bvc.runLocal(
+      'getEpochAddress',
+      { number: 1 }
+    )).output.epoch
+    const publicRandomness = (await manager.contracts.bvc.runLocal(
+      'publicRandomness',
+      { }
+    )).output.publicRandomness
+    console.log('Epoch Address: ', epochAddress)
+    console.log('Public Randomness: ', publicRandomness)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    const ec = new EdDSA('ed25519')
+    const key1 = ec.keyFromSecret(crypto.randomBytes(32))
+    const signature1 = key1.sign(publicRandomness.substr(2)).toHex()
+    await manager.contracts.r1.runContract(
+      'signUpForEpoch',
+      {
+        epochAddress,
+        signHighPart: '0x' + signature1.substr(0, 64),
+        signLowPart: '0x' + signature1.substr(64, 128),
+        pubkey: '0x' + key1.getPublic('hex')
+      },
+      manager.contracts.r1.keys
+    )
+    // try again with same signature
+    await manager.contracts.r1.runContract(
+      'signUpForEpoch',
+      {
+        epochAddress,
+        signHighPart: '0x' + signature1.substr(0, 64),
+        signLowPart: '0x' + signature1.substr(64, 128),
+        pubkey: '0x' + key1.getPublic('hex')
+      },
+      manager.contracts.r1.keys
+    )
+    await new Promise(resolve => setTimeout(resolve, 10000))
+
+    const eraRigistrationMessages = await manager.client.queries.messages.query({
+      filter: {
+        src: { eq: manager.contracts.r1.address },
+        dst: { eq: epochAddress }
+      },
+      result: 'body dst_transaction { compute { success, exit_code } }'
+    })
+    assert.equal(eraRigistrationMessages.length, 2)
+    assert.equal(Boolean(eraRigistrationMessages.find(res => res.dst_transaction?.compute?.success === true)), true)
+    assert.equal(
+      Boolean(eraRigistrationMessages.find(
+        res => res.dst_transaction?.compute?.success === false && res.dst_transaction?.compute?.exit_code === 103
+      )),
+      true
+    )
+  })
+
+  it('e2e: DOT-TON, attempt to vote with invalid choice (should throw error)', async function () {
+    const manager = await deployAndPrepareBridgeComponents(30, 10, 2)
+
+    const epochAddress = (await manager.contracts.bvc.runLocal(
+      'getEpochAddress',
+      { number: 1 }
+    )).output.epoch
+    const publicRandomness = (await manager.contracts.bvc.runLocal(
+      'publicRandomness',
+      { }
+    )).output.publicRandomness
+    console.log('Epoch Address: ', epochAddress)
+    console.log('Public Randomness: ', publicRandomness)
+
+    await signUpForEpoch(manager, 'r1', epochAddress, publicRandomness)
+    await signUpForEpoch(manager, 'r2', epochAddress, publicRandomness)
+    // we need to wait until can force
+    const secondSignupTime = (await manager.client.contracts.runLocal({
+      address: epochAddress,
+      functionName: 'firstEraEndsAt',
+      abi: manager.contracts.Epoch.contractPackage.abi,
+      input: {}
+    })).output.firstEraEndsAt
+    await new Promise(resolve => setTimeout(resolve, parseInt(secondSignupTime) * 1000 - Date.now() + 1000))
+    const thirdRelayerKeys = await manager.createKeysAndReturn()
+    // signup third relayer to end the registration era
+    await manager.loadContract(
+      path.join(__dirname, '../../build/Relayer.tvc'),
+      path.join(__dirname, '../../build/Relayer.abi.json'),
+      { contractName: 'r3', keys: thirdRelayerKeys }
+    )
+    await manager.contracts.r3.deployContract({
+      _accessControllerAddress: manager.contracts.ac.address,
+      _myPublicKey: '0x' + thirdRelayerKeys.public,
+      _myInitState: fs.readFileSync(path.join(__dirname, '../../build/Relayer.tvc'), { encoding: 'base64' }),
+      _bridgeAddress: manager.contracts.b.address
+    })
+    await signUpForEpoch(manager, 'r3', epochAddress, publicRandomness)
+    // calculate encoded granting tip3 message body as a data
+    const runBody = await manager.client.contracts.createRunBody({
+      abi: manager.contracts.tip3root.contractPackage.abi,
+      function: 'mint',
+      params: {
+        to: manager.contracts.tip3w.address,
+        tokens: 1
+      },
+      internal: true
+    })
+    // vote with INVALID choice
+    let error
+    await manager.contracts.r1.runContract(
+      'voteThroughBridge',
+      { epochNumber: 1, choice: 3, chainId: 12, messageType: toHex('tip3'), nonce: 1, data: runBody.bodyBase64 },
+      manager.contracts.r1.keys
+    ).catch(e => { error = e })
+    assert.strictEqual(error !== undefined, true)
+    assert.strictEqual(error.data.exit_code, 122)
   })
 
   // TODO move this functions in helper
