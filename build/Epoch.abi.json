@@ -28,6 +28,16 @@
 			]
 		},
 		{
+			"name": "forceEra",
+			"inputs": [
+				{"name":"signHighPart","type":"uint256"},
+				{"name":"signLowPart","type":"uint256"},
+				{"name":"pubkey","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "voteByEpochController",
 			"inputs": [
 				{"name":"voter","type":"address"},

@@ -20,6 +20,7 @@ contract Epoch is VoteController {
     uint8 error_wrong_sender               = 104;
     uint8 error_invalid_choice             = 105;
     uint8 error_relayer_was_not_passed     = 106;
+    uint8 error_not_your_signature         = 107;
 
     struct Signature {
         uint256 sign_high_part;
@@ -83,6 +84,24 @@ contract Epoch is VoteController {
             }
             IEpochController(voteControllerAddress).newEpoch(nextRandomness);
         }
+    }
+
+    function forceEra(uint256 signHighPart, uint256 signLowPart, uint256 pubkey) external {
+        require(tvm.checkSign(randomness, signHighPart, signLowPart, pubkey), error_bad_proof);
+        require(registered_relayers[Signature(signHighPart, signLowPart)] == msg.sender, error_not_your_signature);
+        TvmBuilder builder;
+        builder.store(nextRandomness, signHighPart, signLowPart);
+        nextRandomness = sha256(builder.toSlice());
+        tvm.accept(); // TODO this contract pays from collected?
+        uint8 counter = 0;
+        optional(Signature, address) relayer = registered_relayers.delMax();
+        while (counter < 3 && relayer.hasValue()) { // TODO counter: static or dynamic? from where?
+            (Signature signature, address relayerAddress) = relayer.get();
+            choosen_relayers[relayerAddress] = signature;
+            relayer = registered_relayers.delMax();
+            counter++;
+        }
+        IEpochController(voteControllerAddress).newEpoch(nextRandomness);
     }
 
     function voteByEpochController(address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, TvmCell data) external {

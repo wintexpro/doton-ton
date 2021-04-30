@@ -900,6 +900,146 @@ describe('Bridge.e2e', function () {
     assert.strictEqual(error.data.exit_code, 122)
   })
 
+  it('e2e: DOT-TON, force era, success case', async function () {
+    const manager = await deployAndPrepareBridgeComponents(30, 10, 2)
+
+    const epochAddress = (await manager.contracts.bvc.runLocal(
+      'getEpochAddress',
+      { number: 1 }
+    )).output.epoch
+    const publicRandomness = (await manager.contracts.bvc.runLocal(
+      'publicRandomness',
+      { }
+    )).output.publicRandomness
+    console.log('Epoch Address: ', epochAddress)
+    console.log('Public Randomness: ', publicRandomness)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    const ec = new EdDSA('ed25519')
+    const key1 = ec.keyFromSecret(crypto.randomBytes(32))
+    const signature1 = key1.sign(publicRandomness.substr(2)).toHex()
+    await manager.contracts.r1.runContract(
+      'signUpForEpoch',
+      {
+        epochAddress,
+        signHighPart: '0x' + signature1.substr(0, 64),
+        signLowPart: '0x' + signature1.substr(64, 128),
+        pubkey: '0x' + key1.getPublic('hex')
+      },
+      manager.contracts.r1.keys
+    )
+
+    // success case
+    await manager.contracts.r1.runContract(
+      'forceEra',
+      {
+        epochAddress,
+        signHighPart: '0x' + signature1.substr(0, 64),
+        signLowPart: '0x' + signature1.substr(64, 128),
+        pubkey: '0x' + key1.getPublic('hex')
+      },
+      manager.contracts.r1.keys
+    )
+    const r1ToEpochMessages = await manager.client.queries.messages.query({
+      filter: {
+        src: { eq: manager.contracts.r1.address },
+        dst: { eq: epochAddress }
+      },
+      result: 'body dst_transaction { compute { success, exit_code } }'
+    })
+    assert.strictEqual(r1ToEpochMessages.length, 2)
+    assert.strictEqual(r1ToEpochMessages[0].dst_transaction.compute.success, true)
+    assert.strictEqual(r1ToEpochMessages[1].dst_transaction.compute.success, true)
+
+    // TODO интересно, что createEpoch завершается с exit_code: -14 (Out of gas: the contract is either low on gas, or its limit is exceeded).
+    // И не только здесь, а везде:
+    // кейс "e2e: DOT-TON, attempt to signup after first era ending" возвращает так же
+    // кейс "e2e: DOT-TON complicated (2 relayers, 2 votes, eras and epoch changing checking) " - так же (вставьте этот код в 421 строку)
+    /* const epochOutboundForBadProposal = await manager.client.queries.messages.query({
+      filter: {
+        src: { eq: epochAddress },
+        dst: { eq: manager.contracts.bvc.address }
+      },
+      result: 'body dst_transaction { compute { success, exit_code } }'
+    })
+    console.log('epochOutboundForBadProposal::', epochOutboundForBadProposal, epochOutboundForBadProposal[0], epochOutboundForBadProposal[1]); */
+  })
+
+  it('e2e: DOT-TON, force era, unsuccess cases', async function () {
+    const manager = await deployAndPrepareBridgeComponents(30, 10, 2)
+
+    const epochAddress = (await manager.contracts.bvc.runLocal(
+      'getEpochAddress',
+      { number: 1 }
+    )).output.epoch
+    const publicRandomness = (await manager.contracts.bvc.runLocal(
+      'publicRandomness',
+      { }
+    )).output.publicRandomness
+    console.log('Epoch Address: ', epochAddress)
+    console.log('Public Randomness: ', publicRandomness)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    const ec = new EdDSA('ed25519')
+    const key1 = ec.keyFromSecret(crypto.randomBytes(32))
+    const signature1 = key1.sign(publicRandomness.substr(2)).toHex()
+    await manager.contracts.r1.runContract(
+      'signUpForEpoch',
+      {
+        epochAddress,
+        signHighPart: '0x' + signature1.substr(0, 64),
+        signLowPart: '0x' + signature1.substr(64, 128),
+        pubkey: '0x' + key1.getPublic('hex')
+      },
+      manager.contracts.r1.keys
+    )
+
+    // bad cases:
+    const key2 = ec.keyFromSecret(crypto.randomBytes(32))
+    const signature2 = key2.sign(publicRandomness.substr(2)).toHex()
+    // try again with invalid signature
+    await manager.contracts.r1.runContract(
+      'forceEra',
+      {
+        epochAddress,
+        signHighPart: '0x' + signature2.substr(0, 64),
+        signLowPart: '0x' + signature2.substr(64, 128),
+        pubkey: '0x' + key1.getPublic('hex')
+      },
+      manager.contracts.r1.keys
+    )
+    const r1ToEpochMessages = await manager.client.queries.messages.query({
+      filter: {
+        src: { eq: manager.contracts.r1.address },
+        dst: { eq: epochAddress }
+      },
+      result: 'body dst_transaction { compute { success, exit_code } }'
+    })
+    assert.strictEqual(r1ToEpochMessages[1].dst_transaction.compute.success, false)
+    assert.strictEqual(r1ToEpochMessages[1].dst_transaction.compute.exit_code, 101)
+
+    // try again with unregistred signature
+    await manager.contracts.r2.runContract(
+      'forceEra',
+      {
+        epochAddress,
+        signHighPart: '0x' + signature2.substr(0, 64),
+        signLowPart: '0x' + signature2.substr(64, 128),
+        pubkey: '0x' + key2.getPublic('hex')
+      },
+      manager.contracts.r2.keys
+    )
+    const r2ToEpochMessages = await manager.client.queries.messages.query({
+      filter: {
+        src: { eq: manager.contracts.r2.address },
+        dst: { eq: epochAddress }
+      },
+      result: 'body dst_transaction { compute { success, exit_code } }'
+    })
+    assert.strictEqual(r2ToEpochMessages[0].dst_transaction.compute.success, false)
+    assert.strictEqual(r2ToEpochMessages[0].dst_transaction.compute.exit_code, 107)
+  })
+
   // TODO move this functions in helper
 
   async function signUpForEpoch (manager, relayerContract, epochAddress, publicRandomness) {
