@@ -47,6 +47,17 @@
 			]
 		},
 		{
+			"name": "forceEra",
+			"inputs": [
+				{"name":"epochAddress","type":"address"},
+				{"name":"signHighPart","type":"uint256"},
+				{"name":"signLowPart","type":"uint256"},
+				{"name":"pubkey","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "updateValueForChangeRole",
 			"inputs": [
 				{"name":"newValue","type":"uint128"}

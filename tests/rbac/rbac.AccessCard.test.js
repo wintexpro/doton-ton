@@ -11,8 +11,8 @@ const path = require('path')
 const runLocal = require('../helper').runLocal
 const toHex = require('../helper').toHex
 
-const accessCardAbiPath = path.join(__dirname, '../../contracts/rbac/AccessCard.abi.json')
-const accessCardTvcPath = path.join(__dirname, '../../contracts/rbac/AccessCard.tvc')
+const accessCardAbiPath = path.join(__dirname, '../../build/AccessCard.abi.json')
+const accessCardTvcPath = path.join(__dirname, '../../build/AccessCard.tvc')
 const wintexGiverKeysObject = JSON.parse(fs.readFileSync(path.join(__dirname, '../../contracts/CustomGiverForDevNet/WintexGiver.keys.json')))
 
 // roles in contract AccessCard
@@ -33,8 +33,8 @@ describe('Asserts', function () {
     manager = new Manager()
     await manager.createClient(['http://localhost:80/graphql'])
     await manager.loadContract(
-      path.join(__dirname, '../../contracts/rbac/AccessController.tvc'),
-      path.join(__dirname, '../../contracts/rbac/AccessController.abi.json')
+      path.join(__dirname, '../../build/AccessController.tvc'),
+      path.join(__dirname, '../../build/AccessController.abi.json')
     )
     await manager.loadContract(
       accessCardTvcPath,
@@ -89,8 +89,8 @@ describe('Asserts', function () {
     // --- Deployment the another AccessController ---
     const keysForAccessController2 = await manager.createKeysAndReturn()
     await manager.loadContract(
-      path.join(__dirname, '../../contracts/rbac/AccessController.tvc'),
-      path.join(__dirname, '../../contracts/rbac/AccessController.abi.json'),
+      path.join(__dirname, '../../build/AccessController.tvc'),
+      path.join(__dirname, '../../build/AccessController.abi.json'),
       { contractName: 'AccessController2', keys: keysForAccessController2 }
     )
     await manager.contracts['AccessController2'].deployContract({
@@ -315,8 +315,8 @@ describe('Asserts', function () {
     // Deployment the AccessController:
     const keysForAccessController = await devMgr.createKeysAndReturn()
     await devMgr.loadContract(
-      path.join(__dirname, '../../contracts/rbac/AccessController.tvc'),
-      path.join(__dirname, '../../contracts/rbac/AccessController.abi.json'),
+      path.join(__dirname, '../../build/AccessController.tvc'),
+      path.join(__dirname, '../../build/AccessController.abi.json'),
       { keys: keysForAccessController }
     )
     // send grams to future AccessController address

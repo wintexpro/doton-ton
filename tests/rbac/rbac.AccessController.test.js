@@ -10,11 +10,11 @@ const fs = require('fs')
 const path = require('path')
 const runLocal = require('../helper').runLocal
 
-const accessControllerAbiPath = path.join(__dirname, '../../contracts/rbac/AccessController.abi.json')
-const accessControllerTvcPath = path.join(__dirname, '../../contracts/rbac/AccessController.tvc')
+const accessControllerAbiPath = path.join(__dirname, '../../build/AccessController.abi.json')
+const accessControllerTvcPath = path.join(__dirname, '../../build/AccessController.tvc')
 
-const accessCardAbiPath = path.join(__dirname, '../../contracts/rbac/AccessCard.abi.json')
-const accessCardTvcPath = path.join(__dirname, '../../contracts/rbac/AccessCard.tvc')
+const accessCardAbiPath = path.join(__dirname, '../../build/AccessCard.abi.json')
+const accessCardTvcPath = path.join(__dirname, '../../build/AccessCard.tvc')
 
 describe('RBAC: AccessController', function () {
   let manager
