@@ -82,7 +82,7 @@ contract Epoch is VoteController {
                 relayer = registered_relayers.delMax();
                 counter++;
             }
-            IEpochController(voteControllerAddress).newEpoch(nextRandomness);
+            IEpochController(voteControllerAddress).newEpoch{bounce:true, flag: 1, value:100000000}(nextRandomness);
         }
     }
 
@@ -101,7 +101,7 @@ contract Epoch is VoteController {
             relayer = registered_relayers.delMax();
             counter++;
         }
-        IEpochController(voteControllerAddress).newEpoch(nextRandomness);
+        IEpochController(voteControllerAddress).newEpoch{bounce:true, flag: 1, value:100000000}(nextRandomness);
     }
 
     function voteByEpochController(address voter, uint8 choice, uint8 chainId, bytes32 messageType, address handlerAddress, uint64 nonce, TvmCell data) external {
