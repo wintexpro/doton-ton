@@ -25,6 +25,16 @@ describe('Bridge.e2e', function () {
       path.join(__dirname, '../../build/Epoch.tvc'),
       path.join(__dirname, '../../build/Epoch.abi.json')
     )
+    // load and deploy storagefee
+    const feeStorageKeys = await manager.createKeysAndReturn()
+    await manager.loadContract(
+      path.join(__dirname, '../../build/FeeStorage.tvc'),
+      path.join(__dirname, '../../build/FeeStorage.abi.json'),
+      { contractName: 'fee', keys: feeStorageKeys }
+    )
+    await manager.contracts.fee.deployContract({
+      _relayerInitState: fs.readFileSync(path.join(__dirname, '../../build/Relayer.tvc'), { encoding: 'base64' })
+    })
     // load and deploy access controller
     const accessControllerKeys = await manager.createKeysAndReturn()
     await manager.loadContract(
@@ -193,6 +203,48 @@ describe('Bridge.e2e', function () {
     console.log('=====================')
     return manager
   }
+
+  it('e2e: FeeStorage workarounds (positive simple)', async function () {
+    const manager = await deployAndPrepareBridgeComponents(1, 60, 1)
+    const testValue = 40
+    await manager.contracts.r1.runContract(
+      'storageSetFee',
+      {
+        feeStorageAddress: manager.contracts.fee.address,
+        shaMethod: '0x' + crypto.createHash('sha256').update('test1').digest('hex'),
+        value: testValue
+      },
+      manager.contracts.r1.keys
+    )
+    const testPrice = 21
+    const estimateFeeResult = (await manager.client.contracts.runLocal({
+      address: manager.contracts.fee.address,
+      functionName: 'estimateFee',
+      abi: manager.contracts.fee.contractPackage.abi,
+      input: {
+        shaMethod: '0x' + crypto.createHash('sha256').update('test1').digest('hex'),
+        price: testPrice
+      }
+    })).output.value0
+    assert.equal(parseInt(estimateFeeResult), testPrice * testValue)
+  })
+
+  it('e2e: FeeStorage workarounds (negative simple)', async function () {
+    const manager = await deployAndPrepareBridgeComponents(1, 60, 1)
+    const testPrice = 21
+    // must be an error
+    let error
+    await manager.client.contracts.runLocal({
+      address: manager.contracts.fee.address,
+      functionName: 'estimateFee',
+      abi: manager.contracts.fee.contractPackage.abi,
+      input: {
+        shaMethod: '0x' + crypto.createHash('sha256').update('test1').digest('hex'),
+        price: testPrice
+      }
+    }).catch(e => { error = e })
+    assert.notEqual(error.message.search('code 102'), -1)
+  })
 
   it('e2e: DOT-TON 1 VOTE (silly)', async function () {
     const manager = await deployAndPrepareBridgeComponents(1, 60, 1)

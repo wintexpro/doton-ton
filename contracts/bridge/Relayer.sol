@@ -12,6 +12,10 @@ interface IEpoch {
     function forceEra(uint256 signHighPart, uint256 signLowPart, uint256 pubkey) external;
 }
 
+interface IFeeStorage{
+    function adminSetFee(uint256 shaMethod, uint32 value, uint256 relayerPubKey) external;
+}
+
 contract Relayer is AccessCard {
     
     address bridgeAddress;
@@ -36,6 +40,12 @@ contract Relayer is AccessCard {
         require(myRole == 2 || myRole == 1, error_unsuitable_role);
         tvm.accept();
         IBridge(bridgeAddress).adminSetHandler{bounce:true, flag: 1, value:200000000}(messageType, handlerAddress, tvm.pubkey());
+    }
+
+    function storageSetFee(address feeStorageAddress, uint256 shaMethod, uint32 value) onlyOwner external view {
+        require(myRole == 2 || myRole == 1, error_unsuitable_role);
+        tvm.accept();
+        IFeeStorage(feeStorageAddress).adminSetFee{bounce:true, flag: 1, value:200000000}(shaMethod, value, tvm.pubkey());
     }
 
     function voteThroughBridge(uint64 epochNumber, uint8 choice, uint8 chainId, bytes32 messageType, uint64 nonce, TvmCell data) onlyOwner external view {

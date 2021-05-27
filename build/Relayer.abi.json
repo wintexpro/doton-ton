@@ -23,6 +23,16 @@
 			]
 		},
 		{
+			"name": "storageSetFee",
+			"inputs": [
+				{"name":"feeStorageAddress","type":"address"},
+				{"name":"shaMethod","type":"uint256"},
+				{"name":"value","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "voteThroughBridge",
 			"inputs": [
 				{"name":"epochNumber","type":"uint64"},

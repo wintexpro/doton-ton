@@ -46,6 +46,11 @@ $solcExec Epoch.sol
 EpochLinkCommand=`tvm_linker compile Epoch.code --abi-json Epoch.abi.json`
 EpochLinkName=`echo $EpochLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
 mv $EpochLinkName Epoch.tvc
+## FeeStorage
+$solcExec FeeStorage.sol
+FeeStorageLinkCommand=`tvm_linker compile FeeStorage.code --abi-json FeeStorage.abi.json`
+FeeStorageLinkName=`echo $FeeStorageLinkCommand | grep -o -P '(?<=Saved contract to file ).*(?=testnet)'`
+mv $FeeStorageLinkName FeeStorage.tvc
 ## Bridge
 $solcExec Bridge.sol
 BridgeLinkCommand=`tvm_linker compile Bridge.code --abi-json Bridge.abi.json`

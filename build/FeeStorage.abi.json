@@ -1,0 +1,38 @@
+{
+	"ABI version": 2,
+	"header": ["time"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"_relayerInitState","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "adminSetFee",
+			"inputs": [
+				{"name":"shaMethod","type":"uint256"},
+				{"name":"value","type":"uint32"},
+				{"name":"relayerPubKey","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "estimateFee",
+			"inputs": [
+				{"name":"shaMethod","type":"uint256"},
+				{"name":"price","type":"uint8"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"}
+			]
+		}
+	],
+	"data": [
+	],
+	"events": [
+	]
+}
